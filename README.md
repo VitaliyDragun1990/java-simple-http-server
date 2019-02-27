@@ -18,7 +18,7 @@
 • Support case-insensitive request headers with wrap support; <br/>
 • Be abple to inform client browser about static resource caching; <br/>
 • Support all mime-types.
-• Be able to display error pages with error codes; <br/>
+• Have HTML page templates to display error pages; <br/>
 • Support connection pool to relation database; <br/>
 • Support configuration via property files; <br/>
 • Have CLI for start and stop operation; <br/>
