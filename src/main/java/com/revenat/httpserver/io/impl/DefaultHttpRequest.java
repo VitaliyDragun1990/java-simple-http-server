@@ -11,7 +11,7 @@ import com.revenat.httpserver.io.HttpRequest;
  * @author Vitaly Dragun
  *
  */
-class ReferenceHttpRequest implements HttpRequest {
+class DefaultHttpRequest implements HttpRequest {
 	private final String method;
 	private final String uri;
 	private final String httpVersion;
@@ -19,7 +19,7 @@ class ReferenceHttpRequest implements HttpRequest {
 	private final Map<String, String> headers;
 	private final Map<String, String> parameters;
 
-	ReferenceHttpRequest(String method, String uri, String httpVersion, String remoteAddress,
+	DefaultHttpRequest(String method, String uri, String httpVersion, String remoteAddress,
 			Map<String, String> headers, Map<String, String> parameters) {
 		this.method = method;
 		this.uri = uri;

@@ -12,11 +12,11 @@ import com.revenat.httpserver.io.config.ReadableHttpResponse;
  * @author Vitaly Dragun
  *
  */
-class ReferenceHttpResponseBuilder extends AbstractHttpConfigurableComponent implements HttpResponseBuilder {
+class DefaultHttpResponseBuilder extends AbstractHttpConfigurableComponent implements HttpResponseBuilder {
 	private static final String DEFAULT_CONTENT_TYPE = "text/html";
 	protected final DateTimeProvider dateTimeProvider;
 
-	ReferenceHttpResponseBuilder(HttpServerConfig httpServerConfig, DateTimeProvider dateTimeProvider) {
+	DefaultHttpResponseBuilder(HttpServerConfig httpServerConfig, DateTimeProvider dateTimeProvider) {
 		super(httpServerConfig);
 		this.dateTimeProvider = requireNonNull(dateTimeProvider, "DateTimeProvider can not be null");
 	}
@@ -35,7 +35,7 @@ class ReferenceHttpResponseBuilder extends AbstractHttpConfigurableComponent imp
 	}
 
 	protected ReadableHttpResponse createReadableHttpResponse() {
-		return new ReferenceReadableHttpResponse();
+		return new DefaultReadableHttpResponse();
 	}
 
 	@Override

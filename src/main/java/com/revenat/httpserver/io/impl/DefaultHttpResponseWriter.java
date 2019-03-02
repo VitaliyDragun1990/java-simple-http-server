@@ -19,9 +19,9 @@ import com.revenat.httpserver.io.config.ReadableHttpResponse;
  * @author Vitaly Dragun
  *
  */
-class ReferenceHttpResponseWriter extends AbstractHttpConfigurableComponent implements HttpResponseWriter {
+class DefaultHttpResponseWriter extends AbstractHttpConfigurableComponent implements HttpResponseWriter {
 
-	ReferenceHttpResponseWriter(HttpServerConfig httpServerConfig) {
+	DefaultHttpResponseWriter(HttpServerConfig httpServerConfig) {
 		super(httpServerConfig);
 	}
 

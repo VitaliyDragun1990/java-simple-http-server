@@ -28,12 +28,12 @@ import com.revenat.httpserver.io.utils.HttpUtils;
  * @author Vitaly Dragun
  *
  */
-class ReferenceReadableHttpResponse implements ReadableHttpResponse {
+class DefaultReadableHttpResponse implements ReadableHttpResponse {
 	private final Map<String, String> headers;
 	private byte[] body;
 	private int status;
 	
-	protected ReferenceReadableHttpResponse() {
+	protected DefaultReadableHttpResponse() {
 		this.status = 200;
 		this.headers = new LinkedHashMap<>();
 		this.body = new byte[0];

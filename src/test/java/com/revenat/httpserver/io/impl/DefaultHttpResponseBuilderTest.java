@@ -21,7 +21,7 @@ import com.revenat.httpserver.io.config.HttpServerConfig;
 import com.revenat.httpserver.io.config.ReadableHttpResponse;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ReferenceHttpResponseBuilderTest {
+public class DefaultHttpResponseBuilderTest {
 	private static final ZonedDateTime CURRENT_DATE_TIME = ZonedDateTime.now();
 	private static final String DATE_TIME_STRING = DateTimeFormatter.RFC_1123_DATE_TIME.format(CURRENT_DATE_TIME);
 
@@ -34,7 +34,7 @@ public class ReferenceHttpResponseBuilderTest {
 
 	@Before
 	public void setup() {
-		builder = new ReferenceHttpResponseBuilder(config, provider);
+		builder = new DefaultHttpResponseBuilder(config, provider);
 		ServerInfo serverInfo = mock(ServerInfo.class);
 		when(provider.getCurrentDateTime()).thenReturn(CURRENT_DATE_TIME);
 		when(config.getServerInfo()).thenReturn(serverInfo);
@@ -110,7 +110,7 @@ public class ReferenceHttpResponseBuilderTest {
 	
 	
 	private static ReadableHttpResponse createEmptyResponse() {
-		return new ReferenceReadableHttpResponse();
+		return new DefaultReadableHttpResponse();
 	}
 
 }

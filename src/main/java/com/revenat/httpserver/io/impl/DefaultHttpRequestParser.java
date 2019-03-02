@@ -27,7 +27,7 @@ import com.revenat.httpserver.io.utils.HttpUtils;
  * @author Vitaly Dragun
  *
  */
-public class ReferenceHttpRequestParser implements HttpRequestParser {
+public class DefaultHttpRequestParser implements HttpRequestParser {
 
 	@Override
 	public HttpRequest parseHttpRequest(InputStream inputStream, String remoteAddress)
@@ -64,7 +64,7 @@ public class ReferenceHttpRequestParser implements HttpRequestParser {
 		// Parse message body / URI parameters
 		ProcessedUri processedUri = extractParametersIfPresent(method, uri, request.messageBody);
 
-		return new ReferenceHttpRequest(method, processedUri.uri, httpVersion, remoteAddress, headers,
+		return new DefaultHttpRequest(method, processedUri.uri, httpVersion, remoteAddress, headers,
 				processedUri.parameters);
 	}
 
