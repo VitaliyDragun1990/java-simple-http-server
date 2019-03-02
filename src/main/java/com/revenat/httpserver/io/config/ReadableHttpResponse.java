@@ -14,9 +14,9 @@ import com.revenat.httpserver.io.HttpResponse;
 public interface ReadableHttpResponse extends HttpResponse {
 
 	/**
-	 * returns status code for this response.
+	 * Returns status code for this response.
 	 */
-	int setStatus();
+	int getStatus();
 	
 	/**
 	 * Returns map with all headers from this response.

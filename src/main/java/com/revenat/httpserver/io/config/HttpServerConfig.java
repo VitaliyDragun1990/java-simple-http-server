@@ -6,9 +6,9 @@ import com.revenat.httpserver.io.HttpServerContext;
 import com.revenat.httpserver.io.ServerInfo;
 
 /**
- * Component that holds information about what particular components
+ * Component that holds information about which particular components
  * implementations should be created for one particular HTTP server execution
- * thread. All components provided by instance of {@link HttpServerConfig},
+ * thread. All components provided by the instance of {@link HttpServerConfig},
  * except {@link HttpClientSocketHandler}, exist as a single instance in the
  * application, thereby are singletons for their nature.
  * 

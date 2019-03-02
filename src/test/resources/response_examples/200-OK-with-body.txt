@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Date: Wed, 12 Oct 2016 14:36:12 +0300
+Server: Devstudy HTTP server
+Content-Language: en
+Connection: close
+Content-Type: text/plain
+Content-Length: 94
+
+email=welcome%40devstudy.net&password=&number=5&text=Simple+Text&url=http%3A%2F%2Fdevstudy.net
