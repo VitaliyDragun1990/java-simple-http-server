@@ -1,10 +1,11 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.utils;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+
 
 public class ByteArrayTest {
 

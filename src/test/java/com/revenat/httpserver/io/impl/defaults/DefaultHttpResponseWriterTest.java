@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -18,6 +18,8 @@ import org.junit.Test;
 
 import com.revenat.httpserver.io.config.HttpResponseWriter;
 import com.revenat.httpserver.io.config.ReadableHttpResponse;
+import com.revenat.httpserver.io.impl.defaults.DefaultHttpResponseWriter;
+import com.revenat.httpserver.io.impl.defaults.DefaultReadableHttpResponse;
 
 public class DefaultHttpResponseWriterTest {
 	private static final String TEST_FILES_DIR = "src/test/resources/response_examples";

@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -19,6 +19,7 @@ import org.mockito.stubbing.Answer;
 
 import com.revenat.httpserver.io.config.ReadableHttpResponse;
 import com.revenat.httpserver.io.exception.HttpServerException;
+import com.revenat.httpserver.io.impl.defaults.DefaultReadableHttpResponse;
 
 public class DefaultReadableHttpResponseTest {
 
@@ -48,10 +49,10 @@ public class DefaultReadableHttpResponseTest {
 	}
 
 	@Test
-	public void containsZeroStatusWhenCreated() throws Exception {
+	public void contains200StatusWhenCreated() throws Exception {
 		response = new DefaultReadableHttpResponse();
 
-		assertThat(response.getStatus(), equalTo(0));
+		assertThat(response.getStatus(), equalTo(200));
 	}
 	
 	@Test

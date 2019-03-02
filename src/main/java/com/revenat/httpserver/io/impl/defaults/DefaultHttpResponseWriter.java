@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import java.io.IOException;
 import java.io.OutputStream;

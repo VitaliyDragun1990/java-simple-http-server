@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -6,6 +6,12 @@ import java.util.Map;
 
 import com.revenat.httpserver.io.HttpRequest;
 
+/**
+ * Default implementation of the {@link HttpRequest}
+ * 
+ * @author Vitaly Dragun
+ *
+ */
 class DefaultHttpRequest implements HttpRequest {
 	private String startingLine;
 	private String method;

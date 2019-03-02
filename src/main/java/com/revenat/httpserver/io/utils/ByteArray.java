@@ -1,10 +1,10 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.utils;
 
 import static java.util.Objects.requireNonNull;
 
 import java.util.Arrays;
 
-class ByteArray {
+public class ByteArray {
 	private byte[] array = new byte[1024];
 	private int size;
 	

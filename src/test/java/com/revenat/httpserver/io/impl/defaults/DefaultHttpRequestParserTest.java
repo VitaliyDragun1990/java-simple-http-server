@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -16,6 +16,7 @@ import com.revenat.httpserver.io.HttpRequest;
 import com.revenat.httpserver.io.config.HttpRequestParser;
 import com.revenat.httpserver.io.exception.HttpVersionNotSupportedException;
 import com.revenat.httpserver.io.exception.MethodNotAllowedException;
+import com.revenat.httpserver.io.impl.defaults.DefaultHttpRequestParser;
 
 public class DefaultHttpRequestParserTest {
 	private static final String DEFAULT_REMOTE_ADDRESS = "localhost";
@@ -112,7 +113,7 @@ public class DefaultHttpRequestParserTest {
 		assertThat(request.getHeaders().size(), equalTo(3));
 		assertThat(request.getHeaders(), hasEntry("Host", "localhost"));
 		assertThat(request.getHeaders(), hasEntry("Content-Type",
-				"text/html;\r\n" + "              charset=windows-1251\r\n" + " charset=windows-3333"));
+				"text/html;\r\n" + "              charset=windows-1251;\r\n" + " charset=windows-3333"));
 		assertThat(request.getHeaders(), hasEntry("Accept", "text/html"));
 	}
 

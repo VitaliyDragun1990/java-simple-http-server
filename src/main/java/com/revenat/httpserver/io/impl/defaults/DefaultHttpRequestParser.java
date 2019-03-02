@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,14 @@ import com.revenat.httpserver.io.config.HttpRequestParser;
 import com.revenat.httpserver.io.exception.HttpServerException;
 import com.revenat.httpserver.io.exception.HttpVersionNotSupportedException;
 import com.revenat.httpserver.io.exception.MethodNotAllowedException;
+import com.revenat.httpserver.io.utils.ByteArray;
 
+/**
+ * Default implementation of the {@link HttpRequestParser}
+ * 
+ * @author Vitaly Dragun
+ *
+ */
 class DefaultHttpRequestParser implements HttpRequestParser {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultHttpRequestParser.class);
 	private static final char WHITESPACE = ' ';
@@ -38,21 +45,20 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 			throws IOException, HttpServerException {
 		DefaultHttpRequest httpRequest = new DefaultHttpRequest();
 		httpRequest.setRemoteAddress(remoteAddress);
-		
+
 		try (InputStream in = inputStream) {
-			
+
 			String startingLine = getStartingLine(in);
 			String headers = getHeaders(in);
 			ByteArray body = getBody(in, getContentLength(headers));
-			
+
 			populateRequest(httpRequest, startingLine, headers, body);
 		}
-		
-		
+
 		return httpRequest;
 	}
-	
-	private String getStartingLine(InputStream in) throws IOException {
+
+	private static String getStartingLine(InputStream in) throws IOException {
 		ByteArray buffer = new ByteArray();
 		int read = 0;
 		while ((read = in.read()) != -1) {
@@ -63,8 +69,8 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		}
 		return new String(buffer.toArray(), StandardCharsets.UTF_8).trim();
 	}
-	
-	private String getHeaders(InputStream in) throws IOException {
+
+	private static String getHeaders(InputStream in) throws IOException {
 		ByteArray buffer = new ByteArray();
 		int read = 0;
 		while ((read = in.read()) != -1) {
@@ -75,10 +81,10 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		}
 		return new String(buffer.toArray(), StandardCharsets.UTF_8).trim();
 	}
-	
-	private int getContentLength(String headers) {
+
+	private static int getContentLength(String headers) {
 		int contentLengthIndex = headers.toLowerCase().indexOf(CONTENT_LENGTH_HEADER);
-		
+
 		if (contentLengthIndex != -1) {
 			int startCutIndex = contentLengthIndex + CONTENT_LENGTH_HEADER.length();
 			int contentLengthEndIndex = headers.indexOf(NEW_LINE_SYMBOL, startCutIndex);
@@ -87,33 +93,35 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 			try {
 				return Integer.parseInt(contentLength);
 			} catch (NumberFormatException e) {
-				LOGGER.warn("Invalid 'Content-Length' header value. Should be integer number, but was {}", contentLength);
+				LOGGER.warn("Invalid 'Content-Length' header value. Should be integer number, but was {}",
+						contentLength);
 			}
 		}
 		return 0;
 	}
-	
-	private ByteArray getBody(InputStream in, int contentLength) throws IOException {
+
+	private static ByteArray getBody(InputStream in, int contentLength) throws IOException {
 		ByteArray bodyContent = new ByteArray();
-		
+
 		while (contentLength > 0) {
 			byte[] buffer = new byte[contentLength];
 			int readCount = in.read(buffer);
 			bodyContent.add(buffer, 0, readCount);
 			contentLength -= readCount;
 		}
-		
+
 		return bodyContent;
 	}
 
-	private static void populateRequest(DefaultHttpRequest request, String startingLine, String headers, ByteArray body) {
+	private static void populateRequest(DefaultHttpRequest request, String startingLine, String headers,
+			ByteArray body) {
 		String method = parseMethod(startingLine);
 		String uri = parseUri(startingLine);
 		String httpVersion = parseHttpVersion(startingLine);
 		Map<String, String> allHeaders = parseHeaders(headers);
 		Map<String, String> parameters = parseParametersFromUri(uri);
 		parameters.putAll(parseParametersFromBody(body));
-		
+
 		request.setStartingLine(startingLine);
 		request.setMethod(method);
 		request.setUri(uri);
@@ -127,7 +135,6 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		String method = startingLine.substring(0, endIndex).trim();
 		return requireAllowedMethod(method, startingLine);
 	}
-	
 
 	private static String requireAllowedMethod(String method, String startingLine) {
 		if (!ALLOWED_METHODS.contains(method)) {
@@ -138,16 +145,16 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 
 	private static String parseUri(String startingLine) {
 		int startIndex = startingLine.indexOf(WHITESPACE);
-		int endIndex = startingLine.indexOf(WHITESPACE, startIndex+1);
+		int endIndex = startingLine.indexOf(WHITESPACE, startIndex + 1);
 		return startingLine.substring(startIndex, endIndex).trim();
 	}
-	
+
 	private static String parseHttpVersion(String startingLine) {
 		int startIndex = startingLine.lastIndexOf(WHITESPACE);
-		String httpVersion = startingLine.substring(startIndex+1).trim();
+		String httpVersion = startingLine.substring(startIndex + 1).trim();
 		return requireCorrectHttpVersion(httpVersion, startingLine);
 	}
-	
+
 	private static String requireCorrectHttpVersion(String httpVersion, String startingLine) {
 		if (!SUPPORTED_HTTP_VERSION.equals(httpVersion)) {
 			throw new HttpVersionNotSupportedException(httpVersion, startingLine);
@@ -162,15 +169,15 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 
 	private static List<String> getHeaderLines(String headersString) {
 		List<String> headerLines = new ArrayList<>();
-		
+
 		int startIndex = 0;
 		int endIndex = 0;
 		while (endIndex != -1) {
 			while (true) {
 				endIndex = headersString.indexOf(NEW_LINE_SYMBOL, startIndex);
-				while (endIndex+2 < headersString.length() && headersString.charAt(endIndex+2) == WHITESPACE) {
+				while (endIndex + 2 < headersString.length() && headersString.charAt(endIndex + 2) == WHITESPACE) {
 					endIndex = headersString.indexOf(NEW_LINE_SYMBOL, endIndex + 2);
-				} 
+				}
 				if (endIndex != -1) {
 					headerLines.add(headersString.substring(startIndex, endIndex));
 					startIndex = endIndex + 2;
@@ -182,7 +189,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		if (startIndex < headersString.length()) {
 			headerLines.add(headersString.substring(startIndex));
 		}
-		
+
 		return headerLines;
 	}
 
@@ -191,7 +198,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		for (String headerLine : headerLines) {
 			int delimeterIndex = headerLine.indexOf(HEADER_NAME_VALUES_DELIMITER);
 			String headerName = transformToStandardForm(headerLine.substring(0, delimeterIndex).trim());
-			String headerValue = headerLine.substring(delimeterIndex+1).trim();
+			String headerValue = headerLine.substring(delimeterIndex + 1).trim();
 			headers.put(headerName, headerValue);
 		}
 		return headers;
@@ -201,17 +208,17 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		headerName = makeFirstLetterUppercase(headerName.toLowerCase());
 		char delimeter = '-';
 		int delimeterIndex = 0;
-		
+
 		while (delimeterIndex != -1) {
-			delimeterIndex = headerName.indexOf(delimeter, delimeterIndex+1);
-			if (delimeterIndex != -1 && delimeterIndex > 0 && delimeterIndex < headerName.length()-1) {
+			delimeterIndex = headerName.indexOf(delimeter, delimeterIndex + 1);
+			if (delimeterIndex != -1 && delimeterIndex > 0 && delimeterIndex < headerName.length() - 1) {
 				String firtsPart = makeFirstLetterUppercase(headerName.substring(0, delimeterIndex));
-				String secondPart = makeFirstLetterUppercase(headerName.substring(delimeterIndex+1));
+				String secondPart = makeFirstLetterUppercase(headerName.substring(delimeterIndex + 1));
 				headerName = firtsPart + delimeter + secondPart;
-				
+
 			}
 		}
-		
+
 		return headerName;
 	}
 
@@ -226,7 +233,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 		String parametersString = parseParametersString(uri);
 		return getParameters(parametersString);
 	}
-	
+
 	private static Map<String, String> parseParametersFromBody(ByteArray body) {
 		String bodyContent = new String(body.toArray(), StandardCharsets.UTF_8);
 		return getParameters(bodyContent);
@@ -234,9 +241,9 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 
 	private static String parseParametersString(String uri) {
 		int startParamsIndex = uri.indexOf(URI_PARAMS_DELIMITER);
-		return startParamsIndex != -1 ? uri.substring(startParamsIndex+1) : "";
+		return startParamsIndex != -1 ? uri.substring(startParamsIndex + 1) : "";
 	}
-	
+
 	private static Map<String, String> getParameters(String parametersString) {
 		Map<String, String> params = new LinkedHashMap<>();
 		if (!parametersString.isEmpty()) {
@@ -258,7 +265,7 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 				} catch (UnsupportedEncodingException e) {
 					LOGGER.warn("Error during encoding parameters values", e);
 				}
-			} 
+			}
 		}
 		return params;
 	}

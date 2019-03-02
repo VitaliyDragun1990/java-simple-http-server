@@ -1,16 +1,19 @@
 package com.revenat.httpserver.io.impl;
 
+import java.time.ZonedDateTime;
+
 /**
- * Component that provides date and time as string representation.
+ * Component that can produce date and time data in form of
+ * {@link ZonedDateTime} instance.
  * 
  * @author Vitaly Dragun
  *
  */
-public interface DateTimeProvider {
+interface DateTimeProvider {
 
 	/**
-	 * Returns string that contains date and time information
-	 * @return
+	 * Returns instance of the {@link ZonedDateTime} with 
+	 * data that was actual at the time of calling this method.
 	 */
-	String getDateTimeString();
+	ZonedDateTime getCurrentDateTime();
 }

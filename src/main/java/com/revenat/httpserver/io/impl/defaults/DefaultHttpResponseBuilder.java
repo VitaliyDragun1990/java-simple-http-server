@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import com.revenat.httpserver.io.config.HttpResponseBuilder;
 import com.revenat.httpserver.io.config.ReadableHttpResponse;

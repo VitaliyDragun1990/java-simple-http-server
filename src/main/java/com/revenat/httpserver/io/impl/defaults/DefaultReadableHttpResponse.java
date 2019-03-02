@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,15 +17,23 @@ import org.slf4j.LoggerFactory;
 
 import com.revenat.httpserver.io.config.ReadableHttpResponse;
 import com.revenat.httpserver.io.exception.HttpServerException;
+import com.revenat.httpserver.io.utils.ByteArray;
 
+/**
+ * Default implementation of the {@link ReadableHttpResponse}
+ * 
+ * @author Vitaly Dragun
+ *
+ */
 class DefaultReadableHttpResponse implements ReadableHttpResponse {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReadableHttpResponse.class);
-	
+
 	private int status;
 	private Map<String, String> headers;
 	private byte[] body;
-	
-	public DefaultReadableHttpResponse() {
+
+	protected DefaultReadableHttpResponse() {
+		status = 200;
 		headers = new LinkedHashMap<>();
 		body = new byte[0];
 	}
@@ -39,7 +47,7 @@ class DefaultReadableHttpResponse implements ReadableHttpResponse {
 	public void setHeader(String name, Object value) {
 		requireNonNull(name, "Header name can not be null");
 		requireNonNull(value, "Header value can not be null");
-		
+
 		headers.put(name, value.toString());
 	}
 
@@ -72,8 +80,8 @@ class DefaultReadableHttpResponse implements ReadableHttpResponse {
 			body = buffer.toArray();
 		} catch (IOException e) {
 			LOGGER.error("Error occurred during reading HttpResponse body content from input stream.", e);
-			throw new HttpServerException("Error occured during reading HttpResponse body content from"
-					+ " input stream", e);
+			throw new HttpServerException(
+					"Error occured during reading HttpResponse body content from" + " input stream", e);
 		}
 	}
 

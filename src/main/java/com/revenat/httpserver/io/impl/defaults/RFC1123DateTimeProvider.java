@@ -1,4 +1,4 @@
-package com.revenat.httpserver.io.impl;
+package com.revenat.httpserver.io.impl.defaults;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
