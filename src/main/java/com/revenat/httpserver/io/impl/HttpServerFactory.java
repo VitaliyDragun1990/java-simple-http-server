@@ -3,6 +3,7 @@ package com.revenat.httpserver.io.impl;
 import java.util.Properties;
 
 import com.revenat.httpserver.io.HttpServer;
+import com.revenat.httpserver.io.config.HttpServerConfig;
 
 /**
  * Factory responsible for creating new instances of {@link HttpServer}
@@ -26,25 +27,16 @@ public class HttpServerFactory {
 
 	/**
 	 * Creates new instance of the {@link HttpServer} using specified properties
-	 * file with server configuration properties.
+	 * to override server configuration if needed.
 	 * 
-	 * @param serverProperties file containing server configuration properties
+	 * @param serverProperties properties to override some of the server's configuration parameters.
 	 * @return new instance of the {@link HttpServer}
 	 */
-	public HttpServer createHttpServer(Properties serverProperties) {
-		return new HttpServer() {
-			@Override
-			public void start() {
-				// TODO Auto-generated method stub
-
-			}
-
-			@Override
-			public void stop() {
-				// TODO Auto-generated method stub
-
-			}
-		};
+	public HttpServer createHttpServer(Properties overrideServerProperties) {
+		HttpServerConfig httpServerConfig = new DefaultHttpServerConfig(
+				overrideServerProperties,new HttpServerClassPathPropertiesLoader());
+		
+		return new DefaultHttpServer(httpServerConfig);
 	}
 
 }

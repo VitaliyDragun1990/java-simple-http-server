@@ -1,61 +1,55 @@
 package com.revenat.httpserver.io;
 
+import static java.util.Objects.requireNonNull;
+
 /**
- * Contains information about HTTP server's current state
+ * Immutable value type that contains information about HTTP server's current
+ * state
  * 
  * @author Vitaly Dragun
  *
  */
 public class ServerInfo {
-	private String name;
-	private int port;
-	private int threadCount;
+	private final String name;
+	private final int port;
+	private final int threadCount;
 
 	public ServerInfo(String name, int port, int threadCount) {
-		this.name = name;
+		this.name = requireNonNull(name, "Server name can not be null");
+		;
 		this.port = port;
 		this.threadCount = threadCount;
 	}
 
 	/**
 	 * Returns name of the HTTP server
+	 * 
 	 * @return
 	 */
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	/**
 	 * Returns port HTTP server is listening to.
+	 * 
 	 * @return
 	 */
 	public int getPort() {
 		return port;
 	}
 
-	public void setPort(int port) {
-		this.port = port;
-	}
-
 	/**
 	 * Returns total number of execution threads HTTP server has.
+	 * 
 	 * @return
 	 */
 	public int getThreadCount() {
 		return threadCount;
 	}
 
-	public void setThreadCount(int threadCount) {
-		this.threadCount = threadCount;
-	}
-
 	@Override
 	public String toString() {
-		return "ServerInfo [name=" + name + ", port=" + port + ", threadCount=" + threadCount + "]";
-	}
-
+		return String.format("ServerInfo [name=%s, port=%s, threadCount=%s]", name, port, (threadCount == 0 ? "UNLIMITED" : threadCount));
+	}		
 }

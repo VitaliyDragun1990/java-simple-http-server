@@ -27,7 +27,7 @@ import com.revenat.httpserver.io.utils.HttpUtils;
  * @author Vitaly Dragun
  *
  */
-public class DefaultHttpRequestParser implements HttpRequestParser {
+class DefaultHttpRequestParser implements HttpRequestParser {
 
 	@Override
 	public HttpRequest parseHttpRequest(InputStream inputStream, String remoteAddress)

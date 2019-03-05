@@ -24,9 +24,9 @@
 	<!-- <logger name="net.devstudy.lecture11_logging.LoggerDemo" level="trace" /> -->
 <!-- 	<logger name="net.devstudy" level="trace" /> -->
 	
-	<root level="info">
+	<root level="trace">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="ROLLING" />
+		<!-- <appender-ref ref="ROLLING" /> -->
 	</root>
 	
 </configuration>

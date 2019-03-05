@@ -1,21 +1,24 @@
 package com.revenat.httpserver.io.config;
 
+import java.net.Socket;
 import java.util.concurrent.ThreadFactory;
 
 import com.revenat.httpserver.io.HttpServerContext;
 import com.revenat.httpserver.io.ServerInfo;
 
 /**
- * Component that holds information about which particular components
- * implementations should be created for one particular HTTP server execution
- * thread. All components provided by the instance of {@link HttpServerConfig},
- * except {@link HttpClientSocketHandler}, exist as a single instance in the
- * application, thereby are singletons for their nature.
+ * Component that holds all server-related configuration and responsible for
+ * creating other server-specific components (e.g. request parsers, response
+ * builders, etc.) Only one instance of the {@link HttpServerConfig} is required
+ * for the HTTP server. All components created by the {@link HttpServerConfig}
+ * instance, except {@link HttpClientSocketHandler} which is created for each
+ * new client connection, exist as a single instance in the application, thereby
+ * are singletons for their nature.
  * 
  * @author Vitaly Dragun
  *
  */
-public interface HttpServerConfig {
+public interface HttpServerConfig extends AutoCloseable {
 
 	/**
 	 * Returns {@link ServerInfo} instance.
@@ -79,9 +82,12 @@ public interface HttpServerConfig {
 
 	/**
 	 * Creates new instance of the {@link HttpClientSocketHandler} to handle new
-	 * client request to the HTTP server.
+	 * client connection with the HTTP server.
 	 * 
-	 * @return
+	 * @param clientSocket interrogation socket that represents connection between
+	 *                     client agent and the HTTP server
+	 * 
+	 * @return new instance of the {@link HttpClientSocketHandler}
 	 */
-	HttpClientSocketHandler buildNewHttpClientSocketHandler();
+	HttpClientSocketHandler buildNewHttpClientSocketHandler(Socket clientSocket);
 }

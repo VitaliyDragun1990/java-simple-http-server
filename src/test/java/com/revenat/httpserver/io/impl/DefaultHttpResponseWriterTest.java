@@ -1,8 +1,8 @@
 package com.revenat.httpserver.io.impl;
 
-import static com.revenat.httpserver.io.impl.TestPaths.BAD_REQUEST_400_WITH_BODY;
-import static com.revenat.httpserver.io.impl.TestPaths.OK_200_WITH_BODY;
-import static com.revenat.httpserver.io.impl.TestPaths.SERVER_ERROR_500_WITHOUT_BODY;
+import static com.revenat.httpserver.io.impl.TestUtils.BAD_REQUEST_400_WITH_BODY;
+import static com.revenat.httpserver.io.impl.TestUtils.OK_200_WITH_BODY;
+import static com.revenat.httpserver.io.impl.TestUtils.SERVER_ERROR_500_WITHOUT_BODY;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
