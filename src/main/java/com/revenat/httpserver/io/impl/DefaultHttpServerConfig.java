@@ -89,7 +89,8 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 		this.httpRequestParser = new DefaultHttpRequestParser();
 		this.httpResponseWriter = new DefaultHttpResponseWriter(this);
 		this.httpResponseBuilder = new DefaultHttpResponseBuilder(this, new DefaultDateTimeProvider());
-		this.httpRequestDispatcher = new HelloWorldHttpRequestDispatcher();
+//		this.httpRequestDispatcher = new HelloWorldHttpRequestDispatcher();
+		this.httpRequestDispatcher = new SimpleHttpRequestDispatcher(new StaticResourcesGetHttpHandler());
 		this.workerThreadFactory = new DefaultThreadFactory(WORKER_THREAD_PREFIX);
 		this.htmlTemplateManager = null;
 	}
