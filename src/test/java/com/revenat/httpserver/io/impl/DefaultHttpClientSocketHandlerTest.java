@@ -7,6 +7,7 @@ import static com.revenat.httpserver.io.impl.TestUtils.createMimeProperties;
 import static com.revenat.httpserver.io.impl.TestUtils.createServerProperties;
 import static com.revenat.httpserver.io.impl.TestUtils.createStatusesProperties;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -19,7 +20,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.util.Properties;
 
 import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.commons.io.output.WriterOutputStream;
@@ -28,12 +28,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
+import com.revenat.httpserver.io.HttpHandlerRegistrar;
 import com.revenat.httpserver.io.HttpResponse;
 import com.revenat.httpserver.io.config.HttpClientSocketHandler;
 import com.revenat.httpserver.io.config.HttpRequestDispatcher;
+import com.revenat.httpserver.io.config.HttpResponseBuilder;
 import com.revenat.httpserver.io.config.HttpServerConfig;
+import com.revenat.httpserver.io.config.HttpServerResourceLoader;
+import com.revenat.httpserver.io.config.ReadableHttpResponse;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DefaultHttpClientSocketHandlerTest {
@@ -54,16 +60,19 @@ public class DefaultHttpClientSocketHandlerTest {
 	@Mock
 	private Socket clientSocket;
 	@Mock
-	private PropertiesLoader propLoader;
+	private HttpServerResourceLoader propLoader;
 	@Mock
 	private HttpRequestDispatcher requestDispatcher;
+	@Mock
+	private HttpResponseBuilder responseBuilder;
 	
 	private HttpClientSocketHandler handler;
 	
 	@Before
 	public void setup() throws IOException {
 		configurePropertiesLoader();
-		serverConfig = new FakeHttpServerConfig(null, propLoader, requestDispatcher);
+		when(responseBuilder.buildNewHttpResponse()).thenReturn(new DefaultReadableHttpResponse());
+		serverConfig = new FakeHttpServerConfig(propLoader, requestDispatcher, responseBuilder);
 		
 		configureClientSocket();
 	}
@@ -108,24 +117,36 @@ public class DefaultHttpClientSocketHandlerTest {
 	}
 	
 	@Test
-	public void returnsResponseWithStatus500IfServerErrorOccursDuringReqeustHandling() throws Exception {
+	public void setsResponseStatus500IfServerErrorOccursDuringReqeustHandling() throws Exception {
 		doThrow(new IOException("Some error occurred"))
 		.when(requestDispatcher).handle(Mockito.any(), Mockito.any(), Mockito.any(HttpResponse.class));
 		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
+		doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				ReadableHttpResponse response = invocation.getArgument(0);
+				assertThat(response.getStatus(), equalTo(500));
+				return null;
+			}
+		}).when(responseBuilder).prepareHttpResponse(Mockito.any(), Mockito.anyBoolean());
 		
 		handler.run();
-		
-		assertThat(responseContent.toString(), containsString("500 Internal Server Error"));
 	}
 	
 	@Test
-	public void returnsResponseWithStatus405IfRequestMethodNotAllowed() throws Exception {;
+	public void setsResponseStatus405IfRequestMethodNotAllowed() throws Exception {;
 		when(clientSocket.getInputStream()).thenReturn(new ReaderInputStream(new StringReader(PUT_REQUEST_CONTENT), "UTF-8"));
 		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
+		doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				ReadableHttpResponse response = invocation.getArgument(0);
+				assertThat(response.getStatus(), equalTo(405));
+				return null;
+			}
+		}).when(responseBuilder).prepareHttpResponse(Mockito.any(), Mockito.anyBoolean());
 		
 		handler.run();
-		
-		assertThat(responseContent.toString(), containsString("405 Method Not Allowed"));
 	}
 	
 	@SuppressWarnings("serial")
@@ -139,16 +160,23 @@ public class DefaultHttpClientSocketHandlerTest {
 	
 	private static class FakeHttpServerConfig extends DefaultHttpServerConfig {
 		private HttpRequestDispatcher dispatcher;
+		private HttpResponseBuilder responseBuilder;
 
-		FakeHttpServerConfig(Properties overrideServerProperties, PropertiesLoader propertiesLoader,
-				HttpRequestDispatcher dispatcher) {
-			super(overrideServerProperties, propertiesLoader);
+		FakeHttpServerConfig(HttpServerResourceLoader propertiesLoader,
+				HttpRequestDispatcher dispatcher, HttpResponseBuilder responseBuilder) {
+			super(new HttpHandlerRegistrar(), null, propertiesLoader);
 			this.dispatcher = dispatcher;
+			this.responseBuilder = responseBuilder;
 		}
 		@Override
 		public HttpRequestDispatcher getHttpRequestDispatcher() {
 			return dispatcher;
 		}
+		@Override
+		public HttpResponseBuilder getHttpResponseBuilder() {
+			return responseBuilder;
+		}
+		
 	}
 
 }

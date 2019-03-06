@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,12 +36,15 @@ public class DefaultHttpServerTest {
 
 	@Mock
 	private HttpServerConfig serverConfig;
+	@Mock
+	private DefaultHttpClientSocketHandler socketHandler;
 	
 	private DefaultHttpServer httpServer;
 	
 	@Before
 	public void setup() {
 		when(serverConfig.getServerInfo()).thenReturn(SERVER_INFO);
+		when(serverConfig.buildNewHttpClientSocketHandler(Mockito.any())).thenReturn(socketHandler);
 //		when(serverConfig.buildNewHttpClientSocketHandler(Mockito.any())).thenReturn(STUB_SOCKET_HANDLER);
 		when(serverConfig.getWorkerThreadFactory()).thenReturn(STUB_THREAD_FACTORY);
 		httpServer = new DefaultHttpServer(serverConfig);
@@ -62,6 +64,7 @@ public class DefaultHttpServerTest {
 	}
 	
 	@Test
+//	@Ignore("HttpServer stop() command exit JVM")
 	public void throwsExceptionIfStartedMoreThanOnce() throws Exception {
 		expected.expect(HttpServerException.class);
 		expected.expectMessage(containsString("Current HTTP server already started or stopped!"));
@@ -71,7 +74,7 @@ public class DefaultHttpServerTest {
 	}
 	
 	@Test
-	@Ignore("HttpServer stop() command exit JVM")
+//	@Ignore("HttpServer stop() command exit JVM")
 	public void throwsExceptionIfRestartAfterStop() throws Exception {
 		expected.expect(HttpServerException.class);
 		expected.expectMessage(containsString("Current HTTP server already started or stopped!"));

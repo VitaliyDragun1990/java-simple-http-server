@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.revenat.httpserver.io.HtmlTemplateManager;
+import com.revenat.httpserver.io.HttpHandler;
+import com.revenat.httpserver.io.HttpHandlerRegistrar;
 import com.revenat.httpserver.io.HttpServerContext;
 import com.revenat.httpserver.io.ServerInfo;
 import com.revenat.httpserver.io.config.HttpClientSocketHandler;
@@ -27,6 +30,7 @@ import com.revenat.httpserver.io.config.HttpRequestParser;
 import com.revenat.httpserver.io.config.HttpResponseBuilder;
 import com.revenat.httpserver.io.config.HttpResponseWriter;
 import com.revenat.httpserver.io.config.HttpServerConfig;
+import com.revenat.httpserver.io.config.HttpServerResourceLoader;
 import com.revenat.httpserver.io.exception.HttpServerConfigException;
 
 /**
@@ -66,6 +70,8 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 	private final ThreadFactory workerThreadFactory;
 	private final HtmlTemplateManager htmlTemplateManager;
 	private final ServerInfo serverInfo;
+	private final Map<String, HttpHandler> httpHandlers;
+	private final HttpHandler defaultHttpHandler;
 	
 	/**
 	 * List of extensions for static resources to which
@@ -74,8 +80,9 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 	private final List<String> staticExpiresExtensions;
 	private final int staticExpiresDays;
 	
-	DefaultHttpServerConfig(Properties overrideServerProperties, PropertiesLoader propertiesLoader) {
-		loadAllProperties(overrideServerProperties, propertiesLoader);
+	DefaultHttpServerConfig(HttpHandlerRegistrar handlerRegistrar, Properties overrideServerProperties,
+			HttpServerResourceLoader resourceLoader) {
+		loadAllProperties(overrideServerProperties, resourceLoader);
 		
 		this.rootPath = createRootPath();
 		this.dataSource = createBasicDataSource();
@@ -89,13 +96,14 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 		this.httpRequestParser = new DefaultHttpRequestParser();
 		this.httpResponseWriter = new DefaultHttpResponseWriter(this);
 		this.httpResponseBuilder = new DefaultHttpResponseBuilder(this, new DefaultDateTimeProvider());
-//		this.httpRequestDispatcher = new HelloWorldHttpRequestDispatcher();
-		this.httpRequestDispatcher = new SimpleHttpRequestDispatcher(new StaticResourcesGetHttpHandler());
+		this.httpHandlers = handlerRegistrar != null ? handlerRegistrar.toMap() : Collections.emptyMap();
+		this.defaultHttpHandler = new DefaultHttpHandler();
+		this.httpRequestDispatcher = new DefaultHttpRequestDispatcher(defaultHttpHandler, httpHandlers);
 		this.workerThreadFactory = new DefaultThreadFactory(WORKER_THREAD_PREFIX);
-		this.htmlTemplateManager = null;
+		this.htmlTemplateManager = new DefaultHtmlTemplateManager(resourceLoader);
 	}
 
-	protected void loadAllProperties(Properties overrideServerProperties, PropertiesLoader propertiesLoader) {
+	protected void loadAllProperties(Properties overrideServerProperties, HttpServerResourceLoader propertiesLoader) {
 		serverProperties.putAll(propertiesLoader.loadProperties("server.properties"));
 		statusesProperties.putAll(propertiesLoader.loadProperties("statuses.properties"));
 		mimeTypesProperties.putAll(propertiesLoader.loadProperties("mime-types.properties"));

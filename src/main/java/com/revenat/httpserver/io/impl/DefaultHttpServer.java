@@ -30,7 +30,7 @@ class DefaultHttpServer implements HttpServer {
 	private final Thread mainServerThread;
 	private volatile boolean serverStopped;
 	
-	protected DefaultHttpServer(HttpServerConfig httpServerConfig) {
+	DefaultHttpServer(HttpServerConfig httpServerConfig) {
 		this.httpServerConfig = requireNonNull(httpServerConfig, "HttpServerConfig can not be null");
 		this.executorService = createExecutorService();
 		this.mainServerThread = createMainServerThread(createServerRunnable());
@@ -80,7 +80,7 @@ class DefaultHttpServer implements HttpServer {
 					break;
 				}
 			}
-			System.exit(0);
+//			System.exit(0);
 		};
 	}
 	

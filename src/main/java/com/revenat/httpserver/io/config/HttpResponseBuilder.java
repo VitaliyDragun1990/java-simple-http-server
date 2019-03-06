@@ -1,9 +1,8 @@
 package com.revenat.httpserver.io.config;
 
-import com.revenat.httpserver.io.HttpResponse;
-
 /**
- * Creates new instances of the {@link HttpResponse} component.
+ * Component responsible for building new {@link ReadableHttpResponse} objects
+ * and doing final processing upon them.
  * 
  * @author Vitaly Dragun
  *
@@ -11,12 +10,12 @@ import com.revenat.httpserver.io.HttpResponse;
 public interface HttpResponseBuilder {
 
 	/**
-	 * Creates new instance of the {@link ReadableHttpResponse}.
+	 * Creates a new instance of the {@link ReadableHttpResponse}.
 	 */
 	ReadableHttpResponse buildNewHttpResponse();
 
 	/**
-	 * Prepares Http response instance before sending it to the client
+	 * Doing some preparation work upon {@link ReadableHttpResponse} object
 	 * 
 	 * @param response  response to prepare
 	 * @param clearBody true if response body should be cleared, false otherwise

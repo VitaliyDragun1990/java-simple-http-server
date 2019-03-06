@@ -1,13 +1,19 @@
 package com.revenat.httpserver.io.impl;
 
-import static com.revenat.httpserver.io.impl.TestUtils.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static com.revenat.httpserver.io.impl.TestUtils.createMimeProperties;
+import static com.revenat.httpserver.io.impl.TestUtils.createServerProperties;
+import static com.revenat.httpserver.io.impl.TestUtils.createStatusesProperties;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.revenat.httpserver.io.HttpHandlerRegistrar;
 import com.revenat.httpserver.io.HttpServerContext;
 import com.revenat.httpserver.io.ServerInfo;
 import com.revenat.httpserver.io.config.HttpClientSocketHandler;
@@ -26,6 +33,7 @@ import com.revenat.httpserver.io.config.HttpRequestDispatcher;
 import com.revenat.httpserver.io.config.HttpRequestParser;
 import com.revenat.httpserver.io.config.HttpResponseBuilder;
 import com.revenat.httpserver.io.config.HttpResponseWriter;
+import com.revenat.httpserver.io.config.HttpServerResourceLoader;
 import com.revenat.httpserver.io.exception.HttpServerConfigException;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -40,52 +48,58 @@ public class DefaultHttpServerConfigTest {
 	private final Properties SERVER_PROPERTIES = createServerProperties();
 
 	@Mock
-	private PropertiesLoader propertiesLoader;
+	private HttpServerResourceLoader resourceLoader;
 
 	private DefaultHttpServerConfig serverConfig;
 
 	private void setupTestProperties() {
-		when(propertiesLoader.loadProperties(STATUSES_PROPS_RESOURCE)).thenReturn(STATUSES_PROPERTIES);
-		when(propertiesLoader.loadProperties(MIME_PROPS_RESOURCE)).thenReturn(MIME_PROPERTIES);
-		when(propertiesLoader.loadProperties(SERVER_PROPS_RESOURCE)).thenReturn(SERVER_PROPERTIES);
+		when(resourceLoader.loadProperties(STATUSES_PROPS_RESOURCE)).thenReturn(STATUSES_PROPERTIES);
+		when(resourceLoader.loadProperties(MIME_PROPS_RESOURCE)).thenReturn(MIME_PROPERTIES);
+		when(resourceLoader.loadProperties(SERVER_PROPS_RESOURCE)).thenReturn(SERVER_PROPERTIES);
 	}
 
 	@Test
 	public void createsHttpServerConfigWithAllLoadedProperties() throws IOException {
 		setupTestProperties();
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 
 		assertThat(serverConfig.getMimeTypesProperties(), equalTo(MIME_PROPERTIES));
 		assertThat(serverConfig.getServerProperties(), equalTo(SERVER_PROPERTIES));
 		assertThat(serverConfig.getStatusesProperties(), equalTo(STATUSES_PROPERTIES));
 	}
 
+	private DefaultHttpServerConfig createServerConfig(Properties overrideServerProperties,
+			HttpServerResourceLoader resourceLoader) {
+		return new DefaultHttpServerConfig(new HttpHandlerRegistrar(), overrideServerProperties,
+				resourceLoader);
+	}
+
 	@Test(expected = HttpServerConfigException.class)
 	public void throwsExceptionIfCanNotLoadServerProperties() throws Exception {
 		setupTestProperties();
-		when(propertiesLoader.loadProperties(SERVER_PROPS_RESOURCE))
+		when(resourceLoader.loadProperties(SERVER_PROPS_RESOURCE))
 				.thenThrow(new HttpServerConfigException("Can not load props"));
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 
 	@Test(expected = HttpServerConfigException.class)
 	public void throwsExceptionIfCanNotLoadStatusesProperties() throws Exception {
 		setupTestProperties();
-		when(propertiesLoader.loadProperties(STATUSES_PROPS_RESOURCE))
+		when(resourceLoader.loadProperties(STATUSES_PROPS_RESOURCE))
 				.thenThrow(new HttpServerConfigException("Can not load props"));
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 
 	@Test(expected = HttpServerConfigException.class)
 	public void throwsExceptionIfCanNotLoadMimeProperties() throws Exception {
 		setupTestProperties();
-		when(propertiesLoader.loadProperties(MIME_PROPS_RESOURCE))
+		when(resourceLoader.loadProperties(MIME_PROPS_RESOURCE))
 				.thenThrow(new HttpServerConfigException("Can not load props"));
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 
 	@Test
@@ -94,7 +108,7 @@ public class DefaultHttpServerConfigTest {
 		Properties overrideProps = new Properties();
 		overrideProps.setProperty("server.port", "90");
 
-		serverConfig = new DefaultHttpServerConfig(overrideProps, propertiesLoader);
+		serverConfig = createServerConfig(overrideProps, resourceLoader);
 
 		assertThat(serverConfig.getServerProperties().get("server.port"), equalTo("90"));
 	}
@@ -103,7 +117,7 @@ public class DefaultHttpServerConfigTest {
 	public void returnsStaticExpiresDaysAsSpecifiedInServerProperties() throws Exception {
 		setupTestProperties();
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 
 		int actual = serverConfig.getStaticExpiresDays();
 		int expected = Integer.parseInt(SERVER_PROPERTIES.getProperty("webapp.static.expires.days"));
@@ -115,7 +129,7 @@ public class DefaultHttpServerConfigTest {
 	public void returnsStaticExpiresExtensionsAsSpecifiedInServerProperties() throws Exception {
 		setupTestProperties();
 
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 
 		List<String> actual = serverConfig.getStaticExpiresExtensions();
 
@@ -129,7 +143,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.setProperty("webapp.static.dir.root", "/wrong/dir");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -137,7 +151,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.driver");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -145,7 +159,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.url");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -153,7 +167,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.username");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -161,7 +175,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.password");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -169,7 +183,7 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.pool.initSize");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -177,13 +191,13 @@ public class DefaultHttpServerConfigTest {
 		setupTestProperties();
 		SERVER_PROPERTIES.remove("db.datasource.pool.maxSize");
 		
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 	}
 	
 	@Test
 	public void returnsCorrectStatusMessageForSupportedStatusCode() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		String statusMessage = serverConfig.getStatusMessage(200);
 		assertThat(statusMessage, equalTo("OK"));
@@ -192,7 +206,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsStatusMessageforCode500ForAnyUnsupportedStatusCode() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		String statusMessage = serverConfig.getStatusMessage(350);
 		assertThat(statusMessage, equalTo("Internal Server Error"));
@@ -202,7 +216,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsCorrectRootPath() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		assertThat(serverConfig.getRootPath(), equalTo(Paths.get(new File(ROOT_PATH).getAbsoluteFile().toURI())));
 	}
@@ -210,7 +224,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfServerInfoForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		ServerInfo instanceA = serverConfig.getServerInfo();
 		ServerInfo instanceB = serverConfig.getServerInfo();
@@ -221,7 +235,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfHttpRequestParserForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		HttpRequestParser instanceA = serverConfig.getHttpRequestParser();
 		HttpRequestParser instanceB = serverConfig.getHttpRequestParser();
@@ -232,7 +246,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfHttpResponseBuilderForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		HttpResponseBuilder instanceA = serverConfig.getHttpResponseBuilder();
 		HttpResponseBuilder instanceB = serverConfig.getHttpResponseBuilder();
@@ -243,7 +257,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfHttpResponseWriterForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		HttpResponseWriter instanceA = serverConfig.getHttpResponseWriter();
 		HttpResponseWriter instanceB = serverConfig.getHttpResponseWriter();
@@ -254,7 +268,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfHttpServerContextForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		HttpServerContext instanceA = serverConfig.getHttpServerContext();
 		HttpServerContext instanceB = serverConfig.getHttpServerContext();
@@ -265,7 +279,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfHttpRequestDispatcherForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		HttpRequestDispatcher instanceA = serverConfig.getHttpRequestDispatcher();
 		HttpRequestDispatcher instanceB = serverConfig.getHttpRequestDispatcher();
@@ -276,7 +290,7 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsTheSameInstanceOfThreadFactoryForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
+		serverConfig = createServerConfig(null, resourceLoader);
 		
 		ThreadFactory instanceA = serverConfig.getWorkerThreadFactory();
 		ThreadFactory instanceB = serverConfig.getWorkerThreadFactory();
@@ -287,13 +301,20 @@ public class DefaultHttpServerConfigTest {
 	@Test
 	public void returnsNewInstanceOfHttpClientSocketHandlerForEveryCall() throws Exception {
 		setupTestProperties();
-		serverConfig = new DefaultHttpServerConfig(null, propertiesLoader);
-		Socket clientSocket = new Socket();
+		serverConfig = createServerConfig(null, resourceLoader);
+		Socket clientSocket = new StubSocket();
 		
 		HttpClientSocketHandler instanceA = serverConfig.buildNewHttpClientSocketHandler(clientSocket);
 		HttpClientSocketHandler instanceB = serverConfig.buildNewHttpClientSocketHandler(clientSocket);
 		
 		assertThat(instanceA, not(sameInstance(instanceB)));
+	}
+	
+	private static class StubSocket extends Socket {
+		@Override
+		public SocketAddress getRemoteSocketAddress() {
+			return new InetSocketAddress("localhost", 888);
+		}
 	}
 
 }

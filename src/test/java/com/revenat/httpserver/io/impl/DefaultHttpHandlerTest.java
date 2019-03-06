@@ -18,37 +18,43 @@ import java.nio.file.attribute.FileTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
+import com.revenat.httpserver.io.HtmlTemplateManager;
 import com.revenat.httpserver.io.HttpHandler;
 import com.revenat.httpserver.io.HttpRequest;
 import com.revenat.httpserver.io.HttpServerContext;
 import com.revenat.httpserver.io.config.ReadableHttpResponse;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class StaticResourcesGetHttpHandlerTest {
+public class DefaultHttpHandlerTest {
 	private static final Path ROOT_DIR = Paths.get(new File("src/test/resources/test_root").getAbsoluteFile().toURI());
-	private static final String ROOT_DIR_CONTENT = "<ul>"
-												 +		"<li><a href='/favicon.ico'>favicon.ico</a></li>"
-												 +		"<li><a href='/index.html'>index.html</a></li>"
-												 +		"<li><a href='/static'>static/</a></li>"
-												 + "</ul>";
+	private static final String ROOT_DIR_CONTENT =      "<a href='/favicon.ico'>favicon.ico</a><br />\r\n"
+												 +		"<a href='/index.html'>index.html</a><br />\r\n"
+												 +		"<a href='/static'>static/</a><br />\r\n";
 
 	@Mock
 	private HttpServerContext serverContext;
+	@Mock
+	private HtmlTemplateManager templateManager;
 
 	private HttpHandler handler;
 
 	@Before
 	public void setup() {
 		when(serverContext.getRootPath()).thenReturn(ROOT_DIR);
-		handler = new StaticResourcesGetHttpHandler();
+		handler = new DefaultHttpHandler();
 	}
 
 	@Test
@@ -88,14 +94,17 @@ public class StaticResourcesGetHttpHandlerTest {
 	
 	@Test
 	public void setsExpiredHeaderIfRequiredResourceIsCached() throws Exception {
+		int expiresDays = 7;
 		when(serverContext.getContentType("html")).thenReturn("text/html");
-		when(serverContext.getExpiresDaysForResource("html")).thenReturn(7);
+		when(serverContext.getExpiresDaysForResource("html")).thenReturn(expiresDays);
 		HttpRequest request = createGetRequestFor("index.html");
 		ReadableHttpResponse response = createDefaultResponse();
 		
 		handler.handle(serverContext, request, response);
 		
-		assertThat(response.getHeaders().get("Expires"), equalTo("7"));
+		String expectedExpires = DateTimeFormatter.RFC_1123_DATE_TIME.format(
+				ZonedDateTime.now().plus(expiresDays, ChronoUnit.DAYS));
+		assertThat(response.getHeaders().get("Expires"), equalTo(expectedExpires));
 		verify(serverContext, times(1)).getExpiresDaysForResource(anyString());
 	}
 	
@@ -128,6 +137,15 @@ public class StaticResourcesGetHttpHandlerTest {
 	public void listsDirectoryContentInTheResponseBodyIfRequestedResourceIsDirectory() throws Exception {
 		HttpRequest request = createGetRequestFor("/");
 		ReadableHttpResponse response = createDefaultResponse();
+		when(serverContext.getHtmlTemplateManager()).thenReturn(templateManager);
+		when(templateManager.pocessTemplate(Mockito.anyString(), Mockito.any())).then(new Answer<String>() {
+
+			@Override
+			public String answer(InvocationOnMock invocation) throws Throwable {
+				Map<String, Object> args = invocation.getArgument(1);
+				return args.get("BODY").toString();
+			}
+		});
 		
 		handler.handle(serverContext, request, response);
 		
