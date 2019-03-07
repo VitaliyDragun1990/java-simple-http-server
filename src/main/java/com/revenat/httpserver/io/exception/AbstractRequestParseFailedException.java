@@ -21,11 +21,6 @@ public abstract class AbstractRequestParseFailedException extends HttpServerExce
 		this.startingLine = startingLine;
 	}
 
-	public AbstractRequestParseFailedException(Throwable cause, String startingLine) {
-		super(cause);
-		this.startingLine = startingLine;
-	}
-
 	public AbstractRequestParseFailedException(String message, String startingLine) {
 		super(message);
 		this.startingLine = startingLine;

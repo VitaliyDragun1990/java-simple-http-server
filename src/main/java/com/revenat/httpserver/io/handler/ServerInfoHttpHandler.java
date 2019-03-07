@@ -38,7 +38,7 @@ public class ServerInfoHttpHandler implements HttpHandler {
 		
 		if (Constants.GET.equals(request.getMethod())) {
 			Map<String, Object> templateData = getTemplateData(context);
-			response.setBody(context.getHtmlTemplateManager().pocessTemplate(SERVER_INFO_TEMPLATE, templateData));
+			response.setBody(context.getHtmlTemplateManager().processTemplate(SERVER_INFO_TEMPLATE, templateData));
 		} else {
 			response.setStatus(400);
 		}

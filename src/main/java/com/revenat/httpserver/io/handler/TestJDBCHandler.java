@@ -1,23 +1,16 @@
 package com.revenat.httpserver.io.handler;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.revenat.httpserver.io.HttpHandler;
 import com.revenat.httpserver.io.HttpRequest;
 import com.revenat.httpserver.io.HttpResponse;
 import com.revenat.httpserver.io.HttpServerContext;
-import com.revenat.httpserver.io.exception.HttpServerException;
 import com.revenat.httpserver.io.utils.DataUtils;
-import com.revenat.httpserver.io.utils.JDBCUtils;
-import com.revenat.httpserver.io.utils.ResultSetHandler;
-
 
 /**
  * Simple implementation of the {@link HttpHandler} that demonstrates how it can
@@ -27,64 +20,50 @@ import com.revenat.httpserver.io.utils.ResultSetHandler;
  *
  */
 public class TestJDBCHandler implements HttpHandler {
+	private static final String STUDENT_ROW_TEMPLATE = "student-row.html";
 	private static final String STUDENTS_TEMPLATE = "students.html";
-	private static final String SELECT_STUDENTS = "select * from student";
-	private static final ResultSetHandler<List<Student>> STUDENTS_HANDLER = new StudentResultSetHandler();
+
+	private final EntityProvider<Student> studentProvider;
+
+	public TestJDBCHandler(EntityProvider<Student> studentProvider) {
+		requireNonNull(studentProvider, "studentProvider ca not be null");
+		this.studentProvider = studentProvider;
+	}
 
 	@Override
 	public void handle(HttpServerContext context, HttpRequest request, HttpResponse response) throws IOException {
-		try (Connection conn = context.getDataSource().getConnection()) {
-			List<Student> students = JDBCUtils.select(conn, SELECT_STUDENTS, STUDENTS_HANDLER);
-			Map<String, Object> tabelBody = getTableBody(students, context);
-			response.setBody(context.getHtmlTemplateManager().pocessTemplate(STUDENTS_TEMPLATE, tabelBody));
-
-		} catch (SQLException e) {
-			throw new HttpServerException("Error with database: " + e.getMessage(), e);
-		}
+		requireNonNull(context, "context can not be null");
+		requireNonNull(response, "response can not be null");
+		
+		List<Student> students = studentProvider.getAll(context);
+		Map<String, Object> tabelBody = getTableBody(students, context);
+		response.setBody(context.getHtmlTemplateManager().processTemplate(STUDENTS_TEMPLATE, tabelBody));
 
 	}
-	
+
 	private Map<String, Object> getTableBody(List<Student> students, HttpServerContext context) {
 		StringBuilder tableBody = new StringBuilder("");
 		for (Student student : students) {
 			tableBody.append(getRowBody(context, student));
 		}
-		
-		return DataUtils.buildMap(new Object[][]{
-			{ "TABLE-BODY", tableBody }
-		});
+
+		return DataUtils.buildMap(new Object[][] { 
+			{ "TABLE-BODY", tableBody.toString() } 
+			});
 	}
-	
 
 	private String getRowBody(HttpServerContext context, Student student) {
-		Map<String, Object> studentRowArgs = DataUtils.buildMap(new Object[][] {
-			{ "ID" , student.getId() },
-			{ "FIRST-NAME" , student.getFirstName() },
-			{ "LAST-NAME" , student.getLastName() },
-			{ "AGE" , student.getAge() },
-		});
-		return context.getHtmlTemplateManager().pocessTemplate("student-row.html", studentRowArgs);
+		Map<String, Object> studentRowArgs = DataUtils
+				.buildMap(new Object[][] {
+					{ "ID", student.getId() },
+					{ "FIRST-NAME", student.getFirstName() },
+					{ "LAST-NAME", student.getLastName() },
+					{ "AGE", student.getAge() }, 
+					});
+		return context.getHtmlTemplateManager().processTemplate(STUDENT_ROW_TEMPLATE, studentRowArgs);
 	}
 
-	private static class StudentResultSetHandler implements ResultSetHandler<List<Student>> {
-
-		@Override
-		public List<Student> handle(ResultSet rs) throws SQLException {
-			List<Student> students = new ArrayList<>();
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String firstName = rs.getString("first_name");
-				String lastName = rs.getString("last_name");
-				int age = rs.getInt("age");
-				students.add(new Student(id, firstName, lastName, age));
-			}
-			return students;
-		}
-		
-	}
-	
-	@SuppressWarnings("unused")
-	private static class Student {
+	public static class Student {
 		private long id;
 		private String firstName;
 		private String lastName;
@@ -96,7 +75,7 @@ public class TestJDBCHandler implements HttpHandler {
 			setLastName(lastName);
 			setAge(age);
 		}
-		
+
 		public void setId(long id) {
 			this.id = id;
 		}
@@ -120,7 +99,7 @@ public class TestJDBCHandler implements HttpHandler {
 				this.firstName = firstName.toUpperCase();
 			}
 		}
-		
+
 		public long getId() {
 			return this.id;
 		}
@@ -135,29 +114,6 @@ public class TestJDBCHandler implements HttpHandler {
 
 		public int getAge() {
 			return age;
-		}
-
-		@Override
-		public String toString() {
-			return "Student [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", age=" + age + "]";
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(age, firstName, id, lastName);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Student other = (Student) obj;
-			return age == other.age && Objects.equals(firstName, other.firstName) && id == other.id
-					&& Objects.equals(lastName, other.lastName);
 		}
 	}
 

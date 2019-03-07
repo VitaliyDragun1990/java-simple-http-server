@@ -1,12 +1,8 @@
 package com.revenat.httpserver.io.impl;
 
-import static com.revenat.httpserver.io.impl.TestUtils.createMimeProperties;
-import static com.revenat.httpserver.io.impl.TestUtils.createServerProperties;
-import static com.revenat.httpserver.io.impl.TestUtils.createStatusesProperties;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.Assert.assertThat;
+import static com.revenat.httpserver.io.impl.TestUtils.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
@@ -20,7 +16,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ThreadFactory;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -47,6 +46,10 @@ public class DefaultHttpServerConfigTest {
 	private final Properties STATUSES_PROPERTIES = createStatusesProperties();
 	private final Properties SERVER_PROPERTIES = createServerProperties();
 
+	
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
+
 	@Mock
 	private HttpServerResourceLoader resourceLoader;
 
@@ -56,6 +59,12 @@ public class DefaultHttpServerConfigTest {
 		when(resourceLoader.loadProperties(STATUSES_PROPS_RESOURCE)).thenReturn(STATUSES_PROPERTIES);
 		when(resourceLoader.loadProperties(MIME_PROPS_RESOURCE)).thenReturn(MIME_PROPERTIES);
 		when(resourceLoader.loadProperties(SERVER_PROPS_RESOURCE)).thenReturn(SERVER_PROPERTIES);
+	}
+	
+	private DefaultHttpServerConfig createServerConfig(Properties overrideServerProperties,
+			HttpServerResourceLoader resourceLoader) {
+		return new DefaultHttpServerConfig(new HttpHandlerRegistrar(), overrideServerProperties,
+				resourceLoader);
 	}
 
 	@Test
@@ -69,11 +78,6 @@ public class DefaultHttpServerConfigTest {
 		assertThat(serverConfig.getStatusesProperties(), equalTo(STATUSES_PROPERTIES));
 	}
 
-	private DefaultHttpServerConfig createServerConfig(Properties overrideServerProperties,
-			HttpServerResourceLoader resourceLoader) {
-		return new DefaultHttpServerConfig(new HttpHandlerRegistrar(), overrideServerProperties,
-				resourceLoader);
-	}
 
 	@Test(expected = HttpServerConfigException.class)
 	public void throwsExceptionIfCanNotLoadServerProperties() throws Exception {
@@ -138,10 +142,22 @@ public class DefaultHttpServerConfigTest {
 		assertThat(actual, equalTo(expected));
 	}
 	
-	@Test(expected = HttpServerConfigException.class)
+	@Test
 	public void throwsExceptionIfRootPathPropertyInvalid() throws Exception {
 		setupTestProperties();
 		SERVER_PROPERTIES.setProperty("webapp.static.dir.root", "/wrong/dir");
+		expected.expect(HttpServerConfigException.class);
+		expected.expectMessage(containsString("Root path not found"));
+		
+		serverConfig = createServerConfig(null, resourceLoader);
+	}
+	
+	@Test
+	public void throwsExceptionIfRootPathPropertyNotPointToDirectory() throws Exception {
+		setupTestProperties();
+		SERVER_PROPERTIES.setProperty("webapp.static.dir.root", "src/test/resources/test.properties");
+		expected.expect(HttpServerConfigException.class);
+		expected.expectMessage(containsString("Root path is not a directory"));
 		
 		serverConfig = createServerConfig(null, resourceLoader);
 	}
@@ -308,6 +324,50 @@ public class DefaultHttpServerConfigTest {
 		HttpClientSocketHandler instanceB = serverConfig.buildNewHttpClientSocketHandler(clientSocket);
 		
 		assertThat(instanceA, not(sameInstance(instanceB)));
+	}
+	
+	@Test
+	public void returnsDataSourceIfDatasourcePropertyIsSet() throws Exception {
+		setupTestProperties();
+		SERVER_PROPERTIES.setProperty("db.datasource.enabled", "true");
+		serverConfig = createServerConfig(null, resourceLoader);
+		
+		BasicDataSource dataSource = serverConfig.getDataSource();
+		
+		assertThat(dataSource, not(nullValue()));
+	}
+	
+	@Test
+	public void throwsExceptionIfThreadCountPropLessThanZero() throws Exception {
+		setupTestProperties();
+		SERVER_PROPERTIES.setProperty("server.thread.count", "-10");
+		expected.expect(HttpServerConfigException.class);
+		expected.expectMessage(containsString("server.thread.count should be >= 0"));
+		
+		serverConfig = createServerConfig(null, resourceLoader);
+	}
+	
+	@Test
+	public void closesKeepedDatasourceWhenClosedItself() throws Exception {
+		setupTestProperties();
+		serverConfig = createServerConfig(null, resourceLoader);
+		BasicDataSource dataSource = serverConfig.getDataSource();
+		assertThat(dataSource.isClosed(), is(false));
+		
+		serverConfig.close();
+		
+		assertThat(dataSource.isClosed(), is(true));
+	}
+	
+	@Test
+	public void returnsNullDataSourceIfDatasourcePropertyIsFalse() throws Exception {
+		setupTestProperties();
+		SERVER_PROPERTIES.setProperty("db.datasource.enabled", "false");
+		serverConfig = createServerConfig(null, resourceLoader);
+		
+		BasicDataSource dataSource = serverConfig.getDataSource();
+		
+		assertThat(dataSource, nullValue());
 	}
 	
 	private static class StubSocket extends Socket {

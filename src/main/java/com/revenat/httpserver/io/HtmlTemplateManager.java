@@ -17,5 +17,5 @@ public interface HtmlTemplateManager {
 	 * @param args         arguments to be processed in the HTML template
 	 * @return processed HTML template as string
 	 */
-	String pocessTemplate(String templateName, Map<String, Object> args);
+	String processTemplate(String templateName, Map<String, Object> args);
 }

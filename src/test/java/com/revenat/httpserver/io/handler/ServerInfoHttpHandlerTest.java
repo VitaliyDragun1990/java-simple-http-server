@@ -106,7 +106,7 @@ public class ServerInfoHttpHandlerTest {
 	public void setsResponseBodyIfRequestMethodIsGet() throws Exception {
 		String responseBody = "body content";
 		HttpResponseStub response =  createEmptyResponse();
-		when(templateManager.pocessTemplate(Mockito.anyString(), Mockito.any())).thenReturn(responseBody);
+		when(templateManager.processTemplate(Mockito.anyString(), Mockito.any())).thenReturn(responseBody);
 		
 		handler.handle(context, createGetRequest(), response);
 		
@@ -116,7 +116,7 @@ public class ServerInfoHttpHandlerTest {
 	@Test
 	public void createsTemplateDataForResponseBody() throws Exception {
 		HttpResponseStub response =  createEmptyResponse();
-		when(templateManager.pocessTemplate(Mockito.anyString(), Mockito.any())).thenAnswer(new Answer<String>() {
+		when(templateManager.processTemplate(Mockito.anyString(), Mockito.any())).thenAnswer(new Answer<String>() {
 			@Override
 			public String answer(InvocationOnMock invocation) throws Throwable {
 				String templateName = invocation.getArgument(0);
@@ -136,7 +136,24 @@ public class ServerInfoHttpHandlerTest {
 		});
 		
 		handler.handle(context, createGetRequest(), response);
+	}
+	
+	@Test
+	public void setsTemplateArgThreadCountToUnlimitedIfZero() throws Exception {
+		HttpResponseStub response =  createEmptyResponse();
+		when(context.getServerInfo()).thenReturn(createServerInfo(SERVER_NAME, SERVER_PORT, 0));
+		when(templateManager.processTemplate(Mockito.anyString(), Mockito.any())).thenAnswer(new Answer<String>() {
+			@Override
+			public String answer(InvocationOnMock invocation) throws Throwable {
+				Map<String, Object> templateData = invocation.getArgument(1);
+				
+				assertThat(templateData.get("THREAD-COUNT"), equalTo("UNLIMITED"));
+				
+				return "";
+			}
+		});
 		
+		handler.handle(context, createGetRequest(), response);
 	}
 	
 	private static HttpRequest createGetRequest() {

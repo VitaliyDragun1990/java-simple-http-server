@@ -3,6 +3,8 @@ package com.revenat.httpserver.io.utils;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,6 +29,43 @@ public class ByteArrayTest {
 
 		assertThat(array.size(), equalTo(1));
 	}
+	
+	@Test
+	public void hasUnlimitedCapacity() throws Exception {
+		byte[] bigArray = createBigArray(1_000_000);
+		
+		array.add(bigArray, 0, bigArray.length);
+		
+		assertThat(array.size(), equalTo(1_000_000));
+	}
+	
+	private static byte[] createBigArray(int numberOfBytes) {
+		byte[] array = new byte[numberOfBytes];
+		Arrays.fill(array, (byte)100);
+		return array;
+	}
+	
+	@Test
+	public void returnsFalseForLineFeedIfSizeLessThan2() throws Exception {
+		byte[] data = "H".getBytes();
+		for (byte value : data) {
+			array.add(value);
+		}
+
+		assertThat(array.isLineFeed(), is(false));
+		
+	}
+
+	@Test
+	public void returnsFalseIfDoesNotContainLineFeedAthTheEnd() throws Exception {
+		byte[] data = "Hello Jack".getBytes();
+		for (byte value : data) {
+			array.add(value);
+		}
+
+		assertThat(array.isLineFeed(), is(false));
+		
+	}
 
 	@Test
 	public void returnsTrueIfContainsLineFeedAtTheEnd() throws Exception {
@@ -36,6 +75,28 @@ public class ByteArrayTest {
 		}
 
 		assertThat(array.isLineFeed(), is(true));
+	}
+	
+	@Test
+	public void returnsFalseForEmptyLineIfSizeLessThan4() throws Exception {
+		byte[] data = "Bil".getBytes();
+		for (byte value : data) {
+			array.add(value);
+		}
+
+		assertThat(array.isEmptyLine(), is(false));
+		
+	}
+	
+	@Test
+	public void returnsFalseIfDoesNotContainEmptyLineAtTheEnd() throws Exception {
+		byte[] data = "Hello Jack\r\n".getBytes();
+		for (byte value : data) {
+			array.add(value);
+		}
+
+		assertThat(array.isEmptyLine(), is(false));
+		
 	}
 
 	@Test

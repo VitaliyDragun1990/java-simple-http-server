@@ -16,7 +16,6 @@ public class ServerInfo {
 
 	public ServerInfo(String name, int port, int threadCount) {
 		this.name = requireNonNull(name, "Server name can not be null");
-		;
 		this.port = port;
 		this.threadCount = threadCount;
 	}

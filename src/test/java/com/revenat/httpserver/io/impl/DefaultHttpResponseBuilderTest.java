@@ -133,7 +133,7 @@ public class DefaultHttpResponseBuilderTest {
 		response.setStatus(BAD_REQUEST_STATUS);
 		when(config.getStatusMessage(BAD_REQUEST_STATUS)).thenReturn(BAD_REQUEST_MESSAGE);
 		when(context.getHtmlTemplateManager()).thenReturn(templateManager);
-		when(templateManager.pocessTemplate(Mockito.anyString(), Mockito.any())).then(new Answer<String>() {
+		when(templateManager.processTemplate(Mockito.anyString(), Mockito.any())).then(new Answer<String>() {
 			@Override
 			public String answer(InvocationOnMock invocation) throws Throwable {
 				Map<String, Object> args = invocation.getArgument(1);

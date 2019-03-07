@@ -1,7 +1,9 @@
 package com.revenat.httpserver.io.impl;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -12,9 +14,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.attribute.FileTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -64,6 +73,18 @@ public class DefaultReadableHttpResponseTest {
 		assertThat(headers.size(), equalTo(2));
 		assertThat(headers, hasEntry("Name", "value"));
 		assertThat(headers, hasEntry("Name2", "value2"));
+	}
+	
+	@Test
+	public void holdsHeadersInTheOrderTheyWereAdded() throws Exception {
+		response.setHeader("Name", "value");
+		response.setHeader("Name2", "value2");
+		
+		Map<String, String> headers = response.getHeaders();
+		
+		assertThat(headers.size(), equalTo(2));
+		assertThat(headers, MapEntriesMatcher.containsEntriesInRelativeOrder(new Object[] {"Name", "value"},
+				new Object[] {"Name2", "value2"}));
 		
 	}
 	
@@ -170,6 +191,53 @@ public class DefaultReadableHttpResponseTest {
 				throw new IOException("Something went wrong");
 			}
 		};
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private static class MapEntriesMatcher extends TypeSafeMatcher<Map> {
+		private final List<Object[]> entries = new LinkedList<>();
+		
+		private MapEntriesMatcher(Object[]... entries) {
+			for (Object[] entry : entries) {
+				if (entry.length != 2) {
+					throw new IllegalArgumentException("Entry array should contains exactly two elements: key and value");
+				}
+				this.entries.add(entry);
+			}
+		}
+		
+		public static MapEntriesMatcher containsEntriesInRelativeOrder(Object[]... entries) {
+			return new MapEntriesMatcher(entries);
+		}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendText("Enrties in relative order");
+			
+		}
+
+		@SuppressWarnings({ "unchecked" })
+		@Override
+		protected boolean matchesSafely(Map map) {
+			Objects.requireNonNull(map);
+			Iterator<Entry<Object, Object>> iterator = map.entrySet().iterator();
+			if (map.size() == entries.size()) {
+				for (int i = 0; i < entries.size(); i++) {
+					Entry<Object, Object> actual = iterator.next();
+					Object[] expected = entries.get(i);
+					Object actualKey = actual.getKey();
+					Object actualValue = actual.getValue();
+					Object expectedKey = expected[0];
+					Object expectedValue = expected[1];
+					if (!actualKey.equals(expectedKey) || !actualValue.equals(expectedValue)) {
+						return false;
+					}
+				}
+				return true;
+			}
+			return false;
+		}
+		
 	}
 	
 

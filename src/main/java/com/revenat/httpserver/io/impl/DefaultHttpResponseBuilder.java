@@ -62,7 +62,7 @@ class DefaultHttpResponseBuilder extends AbstractHttpConfigurableComponent imple
 		});
 		
 		String content = httpServerConfig.getHttpServerContext()
-				.getHtmlTemplateManager().pocessTemplate(ERROR_TEMPLATE, templateArgs);
+				.getHtmlTemplateManager().processTemplate(ERROR_TEMPLATE, templateArgs);
 		response.setBody(content);
 		
 	}

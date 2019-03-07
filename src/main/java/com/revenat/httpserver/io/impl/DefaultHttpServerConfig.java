@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -95,7 +96,7 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 		this.httpServerContext = new DefaultHttpServerContext(this);
 		this.httpRequestParser = new DefaultHttpRequestParser();
 		this.httpResponseWriter = new DefaultHttpResponseWriter(this);
-		this.httpResponseBuilder = new DefaultHttpResponseBuilder(this, new DefaultDateTimeProvider());
+		this.httpResponseBuilder = new DefaultHttpResponseBuilder(this, new DefaultDateTimeProvider(Clock.systemDefaultZone()));
 		this.httpHandlers = handlerRegistrar != null ? handlerRegistrar.toMap() : Collections.emptyMap();
 		this.defaultHttpHandler = new DefaultHttpHandler();
 		this.httpRequestDispatcher = new DefaultHttpRequestDispatcher(defaultHttpHandler, httpHandlers);
@@ -254,7 +255,6 @@ class DefaultHttpServerConfig implements HttpServerConfig {
 		return rootPath;
 	}
 
-	// TODO: Consider adding getHtmlTemplateManager() method to public interface of HttpServerConfig
 	protected HtmlTemplateManager getHtmlTemplateManager() {
 		return htmlTemplateManager;
 	}

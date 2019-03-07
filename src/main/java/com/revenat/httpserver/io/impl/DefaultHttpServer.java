@@ -80,7 +80,6 @@ class DefaultHttpServer implements HttpServer {
 					break;
 				}
 			}
-//			System.exit(0);
 		};
 	}
 	
@@ -153,5 +152,9 @@ class DefaultHttpServer implements HttpServer {
 		executorService.shutdown();
 		LOGGER.info("HTTP Server stopped");
 		serverStopped = true;
+	}
+	
+	protected boolean isServerStopped() {
+		return serverStopped;
 	}
 }

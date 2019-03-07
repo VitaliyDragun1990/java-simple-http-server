@@ -52,7 +52,7 @@ class DefaultHttpClientSocketHandler implements HttpClientSocketHandler {
 		}
 	}
 
-	protected void execute() throws IOException {
+	private void execute() throws IOException {
 		try (Socket client = clientSocket) {
 			client.setKeepAlive(false);
 			
@@ -64,8 +64,7 @@ class DefaultHttpClientSocketHandler implements HttpClientSocketHandler {
 		
 	}
 
-	// TODO: figure why to pass remote address, if can access it as field??? for testing maybe???
-	protected void processRequest(String rmAddres, InputStream clientInput, OutputStream clientOutput) throws IOException {
+	private void processRequest(String rmAddres, InputStream clientInput, OutputStream clientOutput) throws IOException {
 		ReadableHttpResponse response = httpServerConfig.getHttpResponseBuilder().buildNewHttpResponse();
 		String startingLine = null;
 		
@@ -87,7 +86,7 @@ class DefaultHttpClientSocketHandler implements HttpClientSocketHandler {
 		httpServerConfig.getHttpResponseWriter().writeHttpResponse(clientOutput, response);
 	}
 	
-	protected void processRequest(HttpRequest request, HttpResponse response) {
+	private void processRequest(HttpRequest request, HttpResponse response) {
 		HttpServerContext context = httpServerConfig.getHttpServerContext();
 		try {
 			httpServerConfig.getHttpRequestDispatcher().handle(context, request, response);
@@ -96,7 +95,7 @@ class DefaultHttpClientSocketHandler implements HttpClientSocketHandler {
 		}
 	}
 
-	protected void handleException(Exception ex, HttpResponse response) {
+	private static void handleException(Exception ex, HttpResponse response) {
 		LOGGER.error("Exception during request: " + ex.getMessage(), ex);
 		if (ex instanceof HttpServerException) {
 			HttpServerException e = (HttpServerException) ex;

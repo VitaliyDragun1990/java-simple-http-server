@@ -32,14 +32,13 @@ class DefaultHttpRequestParser implements HttpRequestParser {
 	@Override
 	public HttpRequest parseHttpRequest(InputStream inputStream, String remoteAddress)
 			throws IOException, HttpServerException {
-		String startingLine = null;
 		try {
 			ParsedRequest request = parseInputStream(inputStream);
 			return convertParsedRequestToHttpRequest(request, remoteAddress);
 		} catch (HttpServerException e) {
 			throw e;
 		} catch (RuntimeException e) {
-			throw new BadRequestException("Can not parse HTTP request: " + e.getMessage(), e, startingLine);
+			throw new BadRequestException("Can not parse HTTP request: " + e.getMessage(), e, null);
 		}
 	}
 

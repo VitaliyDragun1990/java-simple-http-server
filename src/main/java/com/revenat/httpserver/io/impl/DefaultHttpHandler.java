@@ -98,7 +98,7 @@ class DefaultHttpHandler implements HttpHandler {
 			{BODY, htmlBody}
 		});
 		
-		return context.getHtmlTemplateManager().pocessTemplate(SIMPLE_TEMPLATE, templateArgs);
+		return context.getHtmlTemplateManager().processTemplate(SIMPLE_TEMPLATE, templateArgs);
 	}
 
 	private String getRelativePath(Path root, Path resource) {

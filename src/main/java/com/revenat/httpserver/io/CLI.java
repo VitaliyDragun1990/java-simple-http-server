@@ -14,6 +14,7 @@ import com.revenat.httpserver.io.handler.HelloWorldHttpHandler;
 import com.revenat.httpserver.io.handler.ServerInfoHttpHandler;
 import com.revenat.httpserver.io.handler.TestJDBCHandler;
 import com.revenat.httpserver.io.impl.HttpServerFactory;
+import com.revenat.httpserver.io.impl.JDBCStudentProvider;
 
 /**
  * Component that represents command line interface to start and stop {@link HttpServer}
@@ -41,7 +42,7 @@ public class CLI {
 	private static HttpHandlerRegistrar getHandlerRegistrar() {
 		return new HttpHandlerRegistrar()
 				.registerHandler("/info", new ServerInfoHttpHandler())
-				.registerHandler("/jdbc", new TestJDBCHandler())
+				.registerHandler("/jdbc", new TestJDBCHandler(new JDBCStudentProvider()))
 				.registerHandler("/hello", new HelloWorldHttpHandler())
 				;
 	}

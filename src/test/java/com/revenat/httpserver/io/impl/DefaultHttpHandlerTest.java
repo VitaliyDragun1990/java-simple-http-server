@@ -138,7 +138,7 @@ public class DefaultHttpHandlerTest {
 		HttpRequest request = createGetRequestFor("/");
 		ReadableHttpResponse response = createDefaultResponse();
 		when(serverContext.getHtmlTemplateManager()).thenReturn(templateManager);
-		when(templateManager.pocessTemplate(Mockito.anyString(), Mockito.any())).then(new Answer<String>() {
+		when(templateManager.processTemplate(Mockito.anyString(), Mockito.any())).then(new Answer<String>() {
 
 			@Override
 			public String answer(InvocationOnMock invocation) throws Throwable {

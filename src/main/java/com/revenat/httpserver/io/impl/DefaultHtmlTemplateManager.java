@@ -23,7 +23,7 @@ class DefaultHtmlTemplateManager implements HtmlTemplateManager {
 	}
 
 	@Override
-	public String pocessTemplate(String templateName, Map<String, Object> args) {
+	public String processTemplate(String templateName, Map<String, Object> args) {
 		requireNonNull(templateName, "Template name can not be null");
 		requireNonNull(args, "Template args can not be null");
 		String template = getTemplate(templateName);

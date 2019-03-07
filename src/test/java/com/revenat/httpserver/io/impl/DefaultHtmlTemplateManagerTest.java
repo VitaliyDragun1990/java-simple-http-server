@@ -43,7 +43,7 @@ public class DefaultHtmlTemplateManagerTest {
 		Map<String, Object> args = getArgs(titleVal, messageVal);
 		when(resourceLoader.loadHtmlTemplate(TEMPLATE_NAME)).thenReturn(TEMPLATE);
 		
-		String actualTemplate = templateManager.pocessTemplate(TEMPLATE_NAME, args);
+		String actualTemplate = templateManager.processTemplate(TEMPLATE_NAME, args);
 		
 		String expectedTemplate = getExpectedTemplate(titleVal, messageVal);
 		assertThat(actualTemplate, equalTo(expectedTemplate));
@@ -54,7 +54,7 @@ public class DefaultHtmlTemplateManagerTest {
 		Map<String, Object> args = getArgs("Test title", "Test message");
 		when(resourceLoader.loadHtmlTemplate(TEMPLATE_NAME)).thenReturn(TEMPLATE);
 		
-		templateManager.pocessTemplate(TEMPLATE_NAME, args);
+		templateManager.processTemplate(TEMPLATE_NAME, args);
 		
 		verify(resourceLoader, times(1)).loadHtmlTemplate(TEMPLATE_NAME);
 	}
@@ -64,9 +64,9 @@ public class DefaultHtmlTemplateManagerTest {
 		Map<String, Object> args = getArgs("Test title", "Test message");
 		when(resourceLoader.loadHtmlTemplate(TEMPLATE_NAME)).thenReturn(TEMPLATE);
 		
-		templateManager.pocessTemplate(TEMPLATE_NAME, args);
-		templateManager.pocessTemplate(TEMPLATE_NAME, args);
-		templateManager.pocessTemplate(TEMPLATE_NAME, args);
+		templateManager.processTemplate(TEMPLATE_NAME, args);
+		templateManager.processTemplate(TEMPLATE_NAME, args);
+		templateManager.processTemplate(TEMPLATE_NAME, args);
 		
 		verify(resourceLoader, times(1)).loadHtmlTemplate(TEMPLATE_NAME);
 		verifyNoMoreInteractions(resourceLoader);
@@ -74,12 +74,12 @@ public class DefaultHtmlTemplateManagerTest {
 	
 	@Test(expected = NullPointerException.class)
 	public void throwsExceptionIfCallWithNullTemplateName() throws Exception {
-		templateManager.pocessTemplate(null, getArgs("Test title", "Test message"));
+		templateManager.processTemplate(null, getArgs("Test title", "Test message"));
 	}
 	
 	@Test(expected = NullPointerException.class)
 	public void throwsExceptionIfCallWithNullArgs() throws Exception {
-		templateManager.pocessTemplate(TEMPLATE_NAME, null);
+		templateManager.processTemplate(TEMPLATE_NAME, null);
 	}
 
 	private String getExpectedTemplate(String titleVal, String messageVal) {

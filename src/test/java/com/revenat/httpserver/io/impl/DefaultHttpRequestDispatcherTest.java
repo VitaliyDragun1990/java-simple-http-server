@@ -1,6 +1,7 @@
 package com.revenat.httpserver.io.impl;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -93,9 +94,27 @@ public class DefaultHttpRequestDispatcherTest {
 		HttpResponse response = createDummyResponse();
 		HttpServerContext context = createDummyContext();
 		HttpRequest request = createRequestWithUri(REQUEST_URI);
-		doThrow(new RuntimeException("Some error occurred")).when(customHandler).handle(any(), any(), any());
+		RuntimeException runtimeException = new RuntimeException("Some error occurred");
+		doThrow(runtimeException).when(customHandler).handle(any(), any(), any());
+		
 		expected.expect(HttpServerException.class);
+		expected.expectCause(sameInstance(runtimeException));
 		expected.expectMessage(containsString("Handle request: " + request.getUri() + " failed: "));
+		
+		requestDispatcher.handle(context, request, response);
+		
+	}
+	
+	@Test
+	public void rethrowsHttpServerExceptionIfOneOccurs() throws Exception {
+		HttpResponse response = createDummyResponse();
+		HttpServerContext context = createDummyContext();
+		HttpRequest request = createRequestWithUri(REQUEST_URI);
+		HttpServerException serverException = new HttpServerException("Some error occurred");
+		doThrow(serverException).when(customHandler).handle(any(), any(), any());
+		
+		expected.expect(sameInstance(serverException));
+		expected.expectMessage(containsString("Some error occurred"));
 		
 		requestDispatcher.handle(context, request, response);
 		
