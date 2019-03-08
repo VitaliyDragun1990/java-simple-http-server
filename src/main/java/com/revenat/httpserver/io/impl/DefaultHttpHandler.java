@@ -22,7 +22,7 @@ import com.revenat.httpserver.io.utils.DataUtils;
 
 /**
  * Default {@link HttpHandler} implementation, responsible for serving
- * requested resources from server's root directory.
+ * requested static resources from server's root directory.
  * 
  * @author Vitaly Dragun
  *

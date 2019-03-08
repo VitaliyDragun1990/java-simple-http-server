@@ -100,7 +100,7 @@ public class DefaultHttpServerTest {
 		httpServer.start();
 		Socket clientSocket = new Socket("localhost", 8085);
 
-		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.MILLISECONDS.sleep(500);
 
 		verify(serverConfig, times(1)).buildNewHttpClientSocketHandler(Mockito.any(Socket.class));
 	}
@@ -119,7 +119,7 @@ public class DefaultHttpServerTest {
 		httpServer.start();
 		Socket clientSocket = new Socket("localhost", 8085);
 
-		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.MILLISECONDS.sleep(500);
 
 		assertThat(httpServer.isServerStopped(), is(true));
 	}
@@ -131,4 +131,5 @@ public class DefaultHttpServerTest {
 			httpServer = createServer();
 		}
 	}
+	
 }

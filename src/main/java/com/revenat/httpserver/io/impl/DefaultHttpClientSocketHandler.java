@@ -81,8 +81,10 @@ class DefaultHttpClientSocketHandler implements HttpClientSocketHandler {
 		}
 		
 		httpServerConfig.getHttpResponseBuilder().prepareHttpResponse(response, startingLine.startsWith(Constants.HEAD));
+		
 		ACCESS_LOGGER.info("Request: {} - \"{}\", Response: {} ({} bytes)", remoteAddress, startingLine,
 				response.getStatus(), response.getBodyLength());
+		
 		httpServerConfig.getHttpResponseWriter().writeHttpResponse(clientOutput, response);
 	}
 	

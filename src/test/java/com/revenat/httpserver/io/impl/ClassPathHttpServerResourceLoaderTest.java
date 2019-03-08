@@ -1,11 +1,17 @@
 package com.revenat.httpserver.io.impl;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import com.revenat.httpserver.io.config.HttpServerResourceLoader;
 import com.revenat.httpserver.io.exception.HttpServerConfigException;
@@ -13,7 +19,12 @@ import com.revenat.httpserver.io.exception.HttpServerException;
 
 public class ClassPathHttpServerResourceLoaderTest {
 	
+	@Rule
+	public ExpectedException expected = ExpectedException.none();
+	
 	private HttpServerResourceLoader loader = new ClassPathHttpServerResourceLoader();
+	
+	
 
 	@Test
 	public void loadsPropertiesFromClassPathResource() throws Exception {
@@ -45,13 +56,39 @@ public class ClassPathHttpServerResourceLoaderTest {
 	@Test(expected = NullPointerException.class)
 	public void throwsExceptionIfTemplateNameIsNull() throws Exception {
 		loader.loadHtmlTemplate(null);
-		
 	}
 	
 	@Test(expected = HttpServerException.class)
 	public void throwsExceptionIfHtmlTemplateDoesNotExist() throws Exception {
 		loader.loadHtmlTemplate("not_found.html");
+	}
+	
+	@Test
+	public void throwsHttpServerExceptionIfIOExceptionDuringPropertiesReading() throws Exception {
+		loader = new ClassPathHttpServerResourceLoader() {
+			@Override
+			protected InputStream getClasspathResource(String resourceName) {
+				return Mockito.mock(InputStream.class, (i) -> {throw new IOException();});
+			}
+		};
+		expected.expect(HttpServerConfigException.class);
+		expected.expectMessage(containsString("Can not load properties from resource"));
 		
+		loader.loadProperties("some.properties");
+	}
+	
+	@Test
+	public void throwsHttpServerExceptionIfIOExceptionDuringTemplateReading() throws Exception {
+		loader = new ClassPathHttpServerResourceLoader() {
+			@Override
+			protected InputStream getClasspathResource(String resourceName) {
+				return Mockito.mock(InputStream.class, (i) -> {throw new IOException();});
+			}
+		};
+		expected.expect(HttpServerException.class);
+		expected.expectMessage(containsString("Can not load template"));
+		
+		loader.loadHtmlTemplate("some_template.html");
 	}
 
 }

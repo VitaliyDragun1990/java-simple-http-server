@@ -20,10 +20,10 @@ import com.revenat.httpserver.io.config.HttpServerResourceLoader;
 public class DefaultHtmlTemplateManagerTest {
 	private static final String MESSAGE = "MESSAGE";
 	private static final String TITLE = "TITLE";
+	
 	private static final String TEMPLATE = "<h1>${"+TITLE+"}</h1>"
 										 + "<p>${"+MESSAGE+"}</p>";
-	private static final String TEMPLATE_FORMAT = "<h1>%s</h1>"
-			 									+ "<p>%s</p>";
+
 	private static final String TEMPLATE_NAME = "test.html";
 	
 	@Mock
@@ -60,7 +60,7 @@ public class DefaultHtmlTemplateManagerTest {
 	}
 	
 	@Test
-	public void cacheTemplateForConsequtiveUsage() throws Exception {
+	public void cachesTemplateForConsequtiveUsage() throws Exception {
 		Map<String, Object> args = getArgs("Test title", "Test message");
 		when(resourceLoader.loadHtmlTemplate(TEMPLATE_NAME)).thenReturn(TEMPLATE);
 		
@@ -83,7 +83,9 @@ public class DefaultHtmlTemplateManagerTest {
 	}
 
 	private String getExpectedTemplate(String titleVal, String messageVal) {
-		return String.format(TEMPLATE_FORMAT, titleVal, messageVal);
+		String templateFormat = "<h1>%s</h1>"
+					           + "<p>%s</p>";
+		return String.format(templateFormat, titleVal, messageVal);
 	}
 
 	private Map<String, Object> getArgs(String titleVal, String messageVal) {

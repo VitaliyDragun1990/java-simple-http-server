@@ -6,10 +6,10 @@
 	<artifactId>http-server</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	
+
 	<name>http-server</name>
 	<description>Multithread simple HTTP server which uses blocking io.</description>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -26,6 +26,7 @@
 		<commons-lang3.version>3.8.1</commons-lang3.version>
 		<commons-dbcp2.version>2.5.0</commons-dbcp2.version>
 		<jacoco.version>0.8.2</jacoco.version>
+		<h2.version>1.4.198</h2.version>
 	</properties>
 
 	<dependencies>
@@ -58,8 +59,15 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.2.3</version>
-			<scope>${logback.version}</scope>
+			<version>${logback.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>${h2.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -175,9 +183,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>3.11.0</version>
-				<configuration>
-					<targetJdk>1.7</targetJdk>
-				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>

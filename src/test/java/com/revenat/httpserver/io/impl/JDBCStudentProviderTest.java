@@ -59,7 +59,15 @@ public class JDBCStudentProviderTest {
 		when(context.getDataSource()).thenReturn(DATA_SOURCE);
 		List<Student> students = provider.getAll(context);
 		
-		assertThat(students.size(), greaterThan(0));
+		assertThat(students, hasSize(2));
+		assertThat(students, hasItems(hasProperty("id", is(1L)),
+									  hasProperty("firstName", is("Jack")),
+									  hasProperty("lastName", is("Smith")),
+									  hasProperty("age", is(25))));
+		assertThat(students, hasItems(hasProperty("id", is(2L)),
+				  					  hasProperty("firstName", is("Anna")),
+				  					  hasProperty("lastName", is("Smith")),
+				  					  hasProperty("age", is(20))));
 	}
 	
 	@Test
@@ -77,10 +85,9 @@ public class JDBCStudentProviderTest {
 		
 		ds.setDefaultAutoCommit(false);
 		ds.setRollbackOnReturn(true);
-		ds.setDriverClassName("org.postgresql.Driver");
-		ds.setUrl("jdbc:postgresql://localhost/devstudy");
-		ds.setUsername("devstudy");
-		ds.setPassword("password");
+		ds.setDriverClassName("org.h2.Driver");
+		ds.setUrl("jdbc:h2:mem:test;INIT=runscript from 'src/test/resources/create.sql'\\;"
+				+ "runscript from 'src/test/resources/init.sql'");
 		ds.setInitialSize(1);
 		ds.setMaxTotal(2);
 	

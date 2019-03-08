@@ -10,15 +10,16 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.Map;
@@ -57,9 +58,9 @@ public class DefaultHttpClientSocketHandlerTest {
 	private static final String GET_HTTP_NOT_SUPPORTED_REQUEST_CONTENT = "GET /index.html HTTP/1.0\r\n\r\n";
 	private static final String CLIENT_REMOTE_ADDRESS = "localhost";
 	
-	private final InputStream clientInputStream = new ReaderInputStream(new StringReader(GET_REQUEST_CONTENT), "UTF-8");
+	private final StubInputStream clientInputStream = createStubInputStream(GET_REQUEST_CONTENT);
 	private final StringWriter responseContent = new StringWriter();
-	private final OutputStream clientOuptuStream = new WriterOutputStream(responseContent, "UTF-8");
+	private final StubOutputStream clientOutputStream = new StubOutputStream(responseContent);
 	
 	private HttpServerConfig serverConfig;
 	@Mock
@@ -81,10 +82,14 @@ public class DefaultHttpClientSocketHandlerTest {
 		
 		configureClientSocket();
 	}
+	
+	private static StubInputStream createStubInputStream(String content) {
+		return new StubInputStream(new StringReader(content));
+	}
 
 	private void configureClientSocket() throws IOException {
 		when(clientSocket.getInputStream()).thenReturn(clientInputStream);
-		when(clientSocket.getOutputStream()).thenReturn(clientOuptuStream);
+		when(clientSocket.getOutputStream()).thenReturn(clientOutputStream);
 		when(clientSocket.getRemoteSocketAddress()).thenReturn(new StubSocketAddress());
 	}
 
@@ -128,6 +133,31 @@ public class DefaultHttpClientSocketHandlerTest {
 		handler.run();
 		
 		assertThat(responseContent.toString(), containsString(RESPONSE_BODY));
+		assertThat(responseContent.toString(), containsString("200 OK"));
+	}
+	
+	@Test
+	public void handlesClientSocketByProperlyClosingAllResources() throws Exception {
+		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
+		
+		handler.run();
+		
+		verify(clientSocket, times(1)).close();
+		assertThat(clientInputStream.isClosed(), is(true));
+		assertThat(clientOutputStream.isClosed(), is(true));
+	}
+	
+	@Test
+	public void properlyClosesAllResourcesIfEOFExceptionBecauseOfEmptyClientInputStream() throws Exception {
+		StubInputStream clientEmptyInputStream = createStubInputStream("");
+		when(clientSocket.getInputStream()).thenReturn(clientEmptyInputStream);
+		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
+		
+		handler.run();
+		
+		verify(clientSocket, times(1)).close();
+		verify(responseBuilder, never()).prepareHttpResponse(Mockito.any(), Mockito.anyBoolean());
+		assertThat(clientOutputStream.isClosed(), is(true));
 	}
 	
 	@Test
@@ -149,8 +179,7 @@ public class DefaultHttpClientSocketHandlerTest {
 	
 	@Test
 	public void setsResponseStatus505IfHttpVersionNotSupported() throws Exception {;
-		when(clientSocket.getInputStream()).thenReturn(new ReaderInputStream(
-				new StringReader(GET_HTTP_NOT_SUPPORTED_REQUEST_CONTENT), "UTF-8"));
+		when(clientSocket.getInputStream()).thenReturn(createStubInputStream(GET_HTTP_NOT_SUPPORTED_REQUEST_CONTENT));
 		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
 		doAnswer(new Answer<Void>() {
 			@Override
@@ -166,7 +195,7 @@ public class DefaultHttpClientSocketHandlerTest {
 	
 	@Test
 	public void setsAllowResponseHeaderIfRequestMethodNotAllowed() throws Exception {;
-		when(clientSocket.getInputStream()).thenReturn(new ReaderInputStream(new StringReader(PUT_REQUEST_CONTENT), "UTF-8"));
+		when(clientSocket.getInputStream()).thenReturn(createStubInputStream(PUT_REQUEST_CONTENT));
 		handler = new DefaultHttpClientSocketHandler(clientSocket, serverConfig);
 		doAnswer(new Answer<Void>() {
 			@Override
@@ -179,6 +208,42 @@ public class DefaultHttpClientSocketHandlerTest {
 		}).when(responseBuilder).prepareHttpResponse(Mockito.any(), Mockito.anyBoolean());
 		
 		handler.run();
+	}
+	
+	private static class StubInputStream extends ReaderInputStream {
+		private boolean isClosed = false;
+		
+		public StubInputStream(Reader reader) {
+			super(reader, "UTF-8");
+		}
+
+		@Override
+		public void close() throws IOException {
+			super.close();
+			isClosed = true;
+		}
+
+		boolean isClosed() {
+			return isClosed;
+		}
+	}
+	
+	private static class StubOutputStream extends WriterOutputStream {
+		private boolean isClosed = false;
+		
+		public StubOutputStream(Writer writer) {
+			super(writer, "UTF-8");
+		}
+
+		@Override
+		public void close() throws IOException {
+			super.close();
+			isClosed = true;
+		}
+		
+		boolean isClosed() {
+			return isClosed;
+		}
 	}
 	
 	@SuppressWarnings("serial")

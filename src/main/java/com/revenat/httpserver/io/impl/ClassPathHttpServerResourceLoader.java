@@ -15,6 +15,13 @@ import com.revenat.httpserver.io.config.HttpServerResourceLoader;
 import com.revenat.httpserver.io.exception.HttpServerConfigException;
 import com.revenat.httpserver.io.exception.HttpServerException;
 
+/**
+ * Default implementation of the {@link HttpServerResourceLoader}
+ * that loads required resources from HTTP server's class path.
+ * 
+ * @author Vitaly Dragun
+ *
+ */
 class ClassPathHttpServerResourceLoader implements HttpServerResourceLoader {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClassPathHttpServerResourceLoader.class);
 	private static final String TEMPLATE_DIR = "html/templates/";
@@ -57,7 +64,7 @@ class ClassPathHttpServerResourceLoader implements HttpServerResourceLoader {
 		return template;
 	}
 
-	private InputStream getClasspathResource(String resourceName) {
+	protected InputStream getClasspathResource(String resourceName) {
 		return classLoader.getResourceAsStream(resourceName);
 	}
 }
