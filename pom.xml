@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.revenat</groupId>
 	<artifactId>http-server</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 
 	<name>http-server</name>
@@ -128,6 +128,7 @@
 					<excludes>
 						<exclude>**/Constants.*</exclude>
 						<exclude>**/CLI.*</exclude>
+						<exclude>**/ServiceWrapper.*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
